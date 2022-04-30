@@ -1,0 +1,2199 @@
+// decompiled Assembly-CSharp.dll, class: GameSave, method: LoadCurrentGame(String): Boolean
+
+// majorGameVersion: 0
+// minorGameVersion: 9
+// releaseGameVersion: 25
+// buildGameVersion: 12077
+
+// For file syntax, please refer to generator.py (it should be simple enough)
+
+// removed all backward compatibility :D, no need for it
+
+GameSave {
+  VFSaveHeader header
+  int64 fileLength
+  int32 version = 6
+  int32 majorGameVersion
+  int32 minorGameVersion
+  int32 releaseGameVersion
+  int32 buildGameVersion // version >= 6
+  int64 gameTick
+  int64 nowTicks
+  int32 sizeOfPngFile
+  uint8 screenShotPngFile[sizeOfPngFile]
+  AccountData accountData // version >= 5
+  uint64 dysonSphereEnergyGenCurrentTick // version >= 5
+  GameData gameData
+}
+
+VFSaveHeader {
+  // "VFSAVE" string
+  uint8 magic0 = 86
+  uint8 magic1 = 70
+  uint8 magic2 = 83
+  uint8 magic3 = 65
+  uint8 magic4 = 86
+  uint8 magic5 = 69
+}
+
+AccountData {
+  int32 version = 0
+  int32 platform // Standalone: 0, Steam: 1, WeGame: 2
+  uint64 userId
+  string userName
+}
+
+GameData {
+  int32 version = 9
+  int32 patch = 6
+  AccountData accountData // repeated
+  string gameName
+  GameDesc gameDesc
+  int64 gameTick
+  GameAchievementData gameAchievement
+  GamePrefsData preferences
+  GameHistoryData history
+  boolean hidePlayerModel
+  boolean disableController
+  GameStatData statistics
+  int32 planetId
+  Player mainPlayer
+  int32 factoryCount
+  GalacticTransport galacticTransport
+  TrashSystem trashSystem
+  PlanetFactory factories[factoryCount]
+  int32 dysonSpheresCount
+  DysonSphereExportStruct dysonSpheres[dysonSpheresCount]
+  // todo: check these two fields
+  int32 zero1 // = 0
+  int32 zero2 // = 0
+  GameAbnormalityData gameAbnormality
+  MilestoneSystem milestoneSystem
+  WarningSystem warningSystem
+}
+
+// used in GameData, inlined
+DysonSphereData {
+  int32 available
+  DysonSphere dysonSphere if (available == 1)
+}
+
+GameDesc {
+  int32 version = 6
+  int64 creationTick // version >= 3
+  int32 creationVersionMajor // version >= 6
+  int32 creationVersionMinor // version >= 6
+  int32 creationVersionRelease // version >= 6
+  int32 creationVersionBuild // version >= 5
+  int32 galaxyAlgo
+  int32 galaxySeed
+  int32 starCount
+  int32 playerProto
+  float32 resourceMultiplier // version >= 2
+  int32 numSavedThemeIds // version >= 1
+  int32 savedThemeIds[numSavedThemeIds] // version >= 1
+  boolean achievementEnable // version >= 4
+}
+
+GameAchievementData {
+  int32 version = 0
+  int32 num
+  GameAchievementRuntimeData data[num]
+}
+
+// used in GameAchievementData, inlined
+GameAchievementRuntimeData {
+  int32 id
+  AchievementRuntimeData_Fractinator data if (id == 73)
+}
+
+AchievementRuntimeData_Fractinator {
+  int16 baseId
+  int16 version = 0
+  int64 progress
+  int32 capacity
+  int32 factoryCount
+  int64 heavyHydSamp[factoryCount * 600]
+  int64 productFix[factoryCount]
+}
+
+// used in GameData
+GamePrefsData {
+  int32 version = 7
+  float64 cameraUPosX
+  float64 cameraUPosY
+  float64 cameraUPosZ
+  float32 cameraURotX
+  float32 cameraURotY
+  float32 cameraURotZ
+  float32 cameraURotW
+  int32 reformBrushSize // version >= 1
+  int32 reformBrushType // version >= 4
+  int32 reformBrushDecalType // version >= 7
+  int32 reformBrushColor // version >= 4
+  int32 numReplicatorMultipliers // version >= 1
+  KeyValuePairInt32Int32 replicatorMultipliers[numReplicatorMultipliers] // version >= 1
+  boolean detailPower // version >= 1
+  boolean detailVein // version >= 1
+  boolean detailSpaceGuide // version >= 1
+  boolean detailSign // version >= 1
+  boolean detailIcon // version >= 1
+  int32 numTutorialsShowing // version >= 2
+  int32 tutorialsShowing[numTutorialsShowing] // version >= 2
+  int32 numAstroNames // version >= 5
+  AstroName astroNames[numAstroNames] // version >= 5
+  int32 upgradeLevels // version >= 4
+  int16 upgradeCursorType // version >= 4
+  int16 upgradeCursorSize // version >= 4; clip in range [1, 11]
+  boolean upgradeFilterFacility // version >= 4
+  boolean upgradeFilterBelt // version >= 4
+  boolean upgradeFilterInserter // version >= 4
+  int16 dismantleCursorType // version >= 4
+  int16 dismantleCursorSize // version >= 4; clip in range [1, 11]
+  boolean dismantleFilterFacility // version >= 4
+  boolean dismantleFilterBelt // version >= 4
+  boolean dismantleFilterInserter // version >= 4
+  boolean dysonSphereHideFarSideInEditor // version >= 6
+}
+
+KeyValuePairInt32Int32 {
+  int32 key
+  int32 value
+}
+
+// used in GamePrefsData
+AstroName {
+  int32 id
+  string name
+}
+
+GameHistoryData {
+  int32 version = 8
+  int32 numRecipeUnlocked
+  int32 recipeUnlocked[numRecipeUnlocked]
+  int32 numTutorialUnlocked // version >= 2
+  int32 tutorialUnlocked[numTutorialUnlocked] // version >= 2
+  int32 numFeatureKeys
+  int32 featureKeys[numFeatureKeys]
+  int32 numFeatureValues // version >= 5
+  KeyValuePairInt32Int32 featureValues[numFeatureValues] // version >= 5
+  JournalSystem journalSystem // version >= 6
+  int32 numTechState
+  TechState techState[numTechState]
+  boolean autoManageLabItems
+  int32 currentTech
+  int32 numTechQueue // version >= 1
+  int32 techQueue[numTechQueue] // version >= 1
+  int32 universeObserveLevel
+  int32 blueprintLimit // version >= 4
+  float32 solarSailLife
+  float32 solarEnergyLossRate
+  boolean useIonLayer
+  int32 inserterStackCount
+  float32 logisticDroneSpeed
+  float32 logisticDroneSpeedScale
+  int32 logisticDroneCarries
+  float32 logisticShipSailSpeed
+  float32 logisticShipWarpSpeed
+  float32 logisticShipSailSpeedScale
+  boolean logisticShipWarpDrive
+  int32 logisticShipCarries
+  float32 miningCostRate
+  float32 miningSpeedScale
+  int32 storageLevel
+  int32 labLevel
+  int32 techSpeed
+  float32 dysonNodeLatitude
+  int64 universeMatrixPointUploaded
+  boolean missionAccomplished
+  int32 stationPilerLevel // version >= 7
+  int32 remoteStationExtraStorage // version >= 7
+  int32 localStationExtraStorage // version >= 7
+  int32 numPropertyDataProduction // version >= 8
+  KeyValuePairInt32Int32 propertyDataProduction[numPropertyDataProduction] // version >= 8, key: itemId, value: count
+  int32 numPropertyDataConsumption // version >= 8
+  KeyValuePairInt32Int32 propertyDataConsumption[numPropertyDataConsumption] // version >= 8, key: itemId, value: count
+}
+
+TechState {
+  int32 id
+  boolean unlocked
+  int32 curLevel
+  int32 maxLevel
+  int64 hashUploaded
+  int64 hashNeeded
+}
+
+JournalSystem {
+  int32 version = 0
+  int32 num
+  JournalData data[num]
+}
+
+JournalData {
+  int32 version = 0
+  int32 patternId
+  int32 num
+  int64 parameters[num]
+}
+
+GameStatData {
+  int32 version = 0
+  int32 numTechHashedHistory
+  int32 techHashedHistory[numTechHashedHistory]
+  ProductionStatistics statistics
+}
+
+ProductionStatistics {
+  int32 version = 0
+  int32 factoryCount
+  FactoryProductionStat factoryStatPool[factoryCount]
+  int32 numFirstCreateIds
+  int32 firstCreateIds[numFirstCreateIds]
+  int32 numFavoriteIds
+  int32 favoriteIds[numFavoriteIds]
+}
+
+FactoryProductionStat {
+  int32 version = 1
+  int32 productCapacity
+  int32 productCursor
+  ProductStat productPool[productCursor - 1]
+  int32 numPowerPool
+  PowerStat powerPool[numPowerPool]
+  int32 numProductIndices  // length: 12000
+  int32 productIndices[numProductIndices]
+  int64 energyConsumption // version >= 1
+}
+
+ProductStat {
+  int32 version = 1
+  int32 numCount // = 7200
+  int32 count[numCount]
+  int32 numCursor // = 12
+  int32 cursor[numCursor]
+  int32 numTotal // = 14
+  int64 total[numTotal] // version >= 1
+  // int32 totalNonUsed[numTotal] if (version == 0)  // changed in ver 1: int32 -> int64
+  int32 itemId
+}
+
+PowerStat {
+  int32 version = 0
+  int32 numEnergy // = 7200
+  int64 energy[numEnergy]
+  int32 numCursor // = 6
+  int32 cursor[numCursor]
+  int32 numTotal // = 6
+  int64 total[numTotal]
+}
+
+Player {
+  int32 version = 2
+  int32 planetId
+  float32 positionX
+  float32 positionY
+  float32 positionZ
+  float64 uPositionX
+  float64 uPositionY
+  float64 uPositionZ
+  float32 uRotationX
+  float32 uRotationY
+  float32 uRotationZ
+  float32 uRotationW
+  int32 movementState // EMovementState { Walk, Drift, Fly, Sail }
+  float32 warpState
+  boolean warpCommand
+  float64 uVelocityX
+  float64 uVelocityY
+  float64 uVelocityZ
+  int32 inhandItemId
+  int32 inhandItemCount
+  int32 inhandItemInc // version >= 2
+  Mecha mecha
+  StorageComponent package
+  PlayerNavigation navigation // version >= 1
+  int32 sandCount
+}
+
+Mecha {
+  int32 version = 6
+  float64 coreEnergyCap
+  float64 coreEnergy
+  float64 corePowerGen
+  float64 reactorPowerGen
+  float64 reactorEnergy
+  int32 reactorItemId
+  int32 reactorItemInc // version >= 4
+  StorageComponent reactorStorage
+  StorageComponent warpStorage
+  float64 walkPower
+  float64 jumpEnergy
+  float64 thrustPowerPerAcc
+  float64 warpKeepingPowerPerSpeed
+  float64 warpStartPowerPerSpeed
+  float64 miningPower
+  float64 replicatePower
+  float64 researchPower
+  float64 droneEjectEnergy
+  float64 droneEnergyPerMeter
+  int32 coreLevel
+  int32 thrustLevel
+  float32 miningSpeed
+  float32 replicateSpeed
+  float32 walkSpeed
+  float32 jumpSpeed
+  float32 maxSailSpeed
+  float32 maxWarpSpeed
+  float32 buildArea
+  MechaForge forge
+  MechaLab lab
+  int32 droneCount
+  float32 droneSpeed
+  int32 droneMovement
+  MechaDrone drones[droneCount]
+  MechaAppearance appearance // version >= 5
+  MechaAppearance diyAppearance // version >= 5
+  int32 numDiyItems // version >= 6
+  KeyValuePairInt32Int32 diyItems[numDiyItems] // version >= 6
+  int32 constantNumber // = 2119973658 (0x7e5c3b1a)
+}
+
+StorageComponent {
+  int32 version = 2
+  int32 id
+  int32 entityId
+  int32 previous // version >= 1
+  int32 next // version >= 1
+  int32 bottom // version >= 1
+  int32 top // version >= 1
+  int32 type  // EStorageType { Default=0, Fuel=1, Filtered=9 }
+  int32 size
+  int32 bans // version >= 1
+  StorageGrid grids[size] // version >= 2
+  // StorageGridV1 gridsNonUsed[size] if (version < 2)
+}
+
+// inlined
+// StorageGridV1 {
+//   int32 itemId
+//   int32 filter
+//   int32 count
+//   int32 stackSize
+// }
+
+StorageGrid {
+  int32 itemId
+  int32 filter
+  int32 count
+  int32 stackSize
+  int32 inc
+}
+
+MechaForge {
+  int32 version = 0
+  int32 numTasks
+  ForgeTask tasks[numTasks]
+}
+
+ForgeTask {
+  int32 version = 0
+  int32 recipeId
+  int32 count
+  int32 tick
+  int32 tickSpend
+  int32 numItemsIds
+  int32 numProductIds
+  ItemId itemsIds[numItemsIds]
+  ProductId productIds[numProductIds]
+  int32 parentTaskIndex
+}
+
+// inlined
+ItemId {
+  int32 itemId
+  int32 itemCount
+  int32 served
+}
+
+// inlined
+ProductId {
+  int32 productId
+  int32 productCount
+  int32 produced
+}
+
+MechaLab {
+  int32 version = 0
+  int32 numItemPoints
+  KeyValuePairInt32Int32 itemPoints[numItemPoints]
+}
+
+MechaDrone {
+  int32 version = 0
+  int32 stage
+  float32 positionX
+  float32 positionY
+  float32 positionZ
+  float32 targetX
+  float32 targetY
+  float32 targetZ
+  float32 forwardX
+  float32 forwardY
+  float32 forwardZ
+  float32 speed
+  int32 movement
+  int32 targetObject
+  float32 progress
+  float32 initialVectorX
+  float32 initialVectorY
+  float32 initialVectorZ
+}
+
+MechaAppearance {
+  int32 version = 1
+  string overrideName // version >= 1, max length: 64
+  string description // version >= 1, max length: 1024
+  int32 thumbnailLength // version >= 1
+  uint8 thumbnail[thumbnailLength] // version >= 1
+  int32 numMainColors
+  RGBA mainColors[numMainColors]
+  RGBA partColors[numMainColors * 64]
+  uint64 partHideMask
+  uint64 partCustomMask
+  MechaArmor armor
+}
+
+// inlined
+RGBA {
+  uint8 r
+  uint8 g
+  uint8 b
+  uint8 a
+}
+
+MechaArmor {
+  int32 version = 1
+  int32 numBoneArmors // = 256
+  BoneArmorWithIndex boneArmors[numBoneArmors - 1]
+  int32 numMaterials // version >= 1
+  MechaMaterial materials[numMaterials] // version >= 1
+}
+
+// inlined
+BoneArmorWithIndex {
+  int32 index
+  BoneArmor boneArmor if (index > 0)
+}
+
+BoneArmor {
+  uint8 version = 1
+  uint8 xSize
+  uint8 ySize
+  uint8 zSize
+  uint8 voxelSize
+  uint8 hide
+  float32 positionX
+  float32 positionY
+  float32 positionZ
+  float32 rotationX
+  float32 rotationY
+  float32 rotationZ
+  float32 rotationW
+  float32 scaleX
+  float32 scaleY
+  float32 scaleZ
+  int32 voxelsLength
+  uint8 voxels[voxelsLength]
+  int32 numFilters
+  VoxelFilterWithClassId filters[numFilters]
+  int32 matIds[8] // version >= 1
+  int32 checksum // 0x3e7ac000 + boneId
+}
+
+// inlined
+VoxelFilterWithClassId {
+  int32 classId
+  VoxelFilter_Curve voxelFilterCurve if (classId == 1)
+  VoxelFilter_Fan voxelFilterFan if (classId == 2)
+  VoxelFilter_Extrude voxelFilterExtrude if (classId == 3)
+}
+
+VoxelFilter_Curve {
+  uint8 version = 0
+  uint8 axis
+  uint8 size
+  VoxelFilterStateAndPointSet statesAndPointSets[size + 1]
+}
+
+// inlined
+VoxelFilterStateAndPointSet {
+  int32 stateSet
+  float32 pointSetX
+  float32 pointSetY
+}
+
+VoxelFilter_Fan {
+  uint8 version = 0
+  uint8 axis
+  uint8 size
+  uint8 length
+  int32 angle
+}
+
+VoxelFilter_Extrude {
+  uint8 version = 0
+  uint8 axis
+  uint8 size
+  uint8 length
+  VoxelFilterStateAndPointSet statesAndPointSets[size + 1]
+}
+
+MechaMaterial {
+  int32 version = 0
+  int32 protoId
+  int32 numColors
+  RGBA colors[numColors]
+}
+
+PlayerNavigation {
+  int32 version = 1
+  boolean navigating
+  int32 naviAstroId
+  float64 naviTargetX
+  float64 naviTargetY
+  float64 naviTargetZ
+  int32 indicatorAstroId
+  boolean useFly
+  boolean useSail
+  boolean useWarp
+  int32 stage
+  float64 flyThreshold
+  float64 sailThreshold
+  float64 warpThreshold
+  float64 maxSailSpeed
+}
+
+GalacticTransport {
+  int32 version = 0
+}
+
+TrashSystem {
+  int32 version = 0
+  TrashContainer container
+}
+
+TrashContainer {
+  int32 version = 0
+  int32 trashCapacity
+  int32 trashCursor
+  int32 trashRecycleCursor
+  TrashObject trashObjPool[trashCursor]
+  TrashData trashDataPool[trashCursor]
+  int32 trashRecycle[trashRecycleCursor]
+}
+
+TrashObject {
+  // decompiled IL code is correct, but C# is not
+  uint8 version = 1
+  int16 item
+  uint8 count
+  int16 inc // version >= 1
+  float32 rPosX // loads as int32, then convert to float32 and store to rPos.x
+  float32 rPosY // same above
+  float32 rPosZ // same above
+  float32 rRotX
+  float32 rRotY
+  float32 rRotZ
+  float32 rRotW
+  int32 expire
+}
+
+TrashData {
+  int32 version = 0
+  int32 landPlanetId
+  int32 nearPlanetId
+  int32 nearStarId
+  float64 nearStarGravity
+  float32 lPosX
+  float32 lPosY
+  float32 lPosZ
+  float32 lRotX
+  float32 lRotY
+  float32 lRotZ
+  float32 lRotW
+  float64 uPosX
+  float64 uPosY
+  float64 uPosZ
+  float32 uRotX
+  float32 uRotY
+  float32 uRotZ
+  float32 uRotW
+  float64 uVelX
+  float64 uVelY
+  float64 uVelZ
+  float32 uAglX
+  float32 uAglY
+  float32 uAglZ
+}
+
+PlanetFactory {
+  int32 version = 6
+  int32 planetId
+  int32 planetTheme
+  int32 planetAlgoId
+  int32 planetStyle
+  PlanetData planet
+  boolean landed
+  int32 entityCapacity
+  int32 entityCursor
+  int32 entityRecycleCursor
+  EntityExportStruct entityPool[entityCursor - 1]
+  int32 entityRecycle[entityRecycleCursor]
+  int32 prebuildCapacity
+  int32 prebuildCursor
+  int32 prebuildRecycleCursor
+  PrebuildExportStruct prebuildPool[prebuildCursor - 1]
+  int32 prebuildRecycle[prebuildRecycleCursor]
+  int32 vegeCapacity
+  int32 vegeCursor
+  int32 vegeRecycleCursor
+  VegeData vegePool[vegeCursor - 1]
+  int32 vegeRecycle[vegeRecycleCursor]
+  int32 veinCapacity
+  int32 veinCursor
+  int32 veinRecycleCursor
+  VeinData veinPool[veinCursor - 1]
+  int32 veinRecycle[veinRecycleCursor]
+  AnimData veinAnimPool[veinCursor - 1]
+  CargoContainer cargoContainer
+  CargoTraffic cargoTraffic
+  FactoryStorage factoryStorage
+  PowerSystem powerSystem
+  FactorySystem factorySystem
+  PlanetTransport transport
+  PlatformSystem platformSystem
+  DigitalSystem digitalSystem
+}
+
+PlanetData {
+  int32 numModData
+  uint8 modData[numModData]
+  int32 numVeinAmounts
+  int64 veinAmounts[numVeinAmounts]
+  int32 numVeinGroups
+  VeinGroup veinGroups[numVeinGroups]
+}
+
+VeinGroup {
+  // EVeinType { None = 0, Iron = 1, Copper = 2, Silicium = 3, Titanium = 4, Stone = 5, Coal = 6, Oil = 7,
+  //     Fireice = 8, Diamond = 9, Fractal = 10, Crysrub = 11, Grat = 12, Bamboo = 13, Mag = 14, Max = 15 }
+  int32 type
+  float32 posX
+  float32 posY
+  float32 posZ
+  int32 count
+  int64 amount
+}
+
+// inlined
+EntityExportStruct {
+  EntityData entity
+  AnimData entityAnim if (entity.id != 0)
+  SignData signData if (entity.id != 0)
+  EntityConnPool entityConn[16] if (entity.id != 0)
+}
+
+EntityData {
+  uint8 version = 5
+  int32 id
+  int16 protoId if (id > 0)
+  int16 modelIndex if (id > 0)
+  float32 posX if (id > 0)
+  float32 posY if (id > 0)
+  float32 posZ if (id > 0)
+  float32 rotX if (id > 0)
+  float32 rotY if (id > 0)
+  float32 rotZ if (id > 0)
+  float32 rotW if (id > 0)
+  int32 idSum if (id > 0) // sum of beltId, powerConId, ...
+  cid beltId if (id > 0)
+  cid powerConId    if (id > 0 and idSum > beltId.value)
+  cid inserterId    if (id > 0 and powerConId    != null and idSum > beltId.value + powerConId.value)
+  cid assemblerId   if (id > 0 and inserterId    != null and idSum > beltId.value + powerConId.value + inserterId.value)
+  cid labId         if (id > 0 and assemblerId   != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value)
+  cid powerNodeId   if (id > 0 and labId         != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value)
+  cid powerGenId    if (id > 0 and powerNodeId   != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value)
+  cid fractionateId if (id > 0 and powerGenId    != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value)
+  cid storageId     if (id > 0 and fractionateId != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value)
+  cid tankId        if (id > 0 and storageId     != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value)
+  cid splitterId    if (id > 0 and tankId        != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value)
+  cid ejectorId     if (id > 0 and splitterId    != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value)
+  cid minerId       if (id > 0 and ejectorId     != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value)
+  cid siloId        if (id > 0 and minerId       != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value)
+  cid stationId     if (id > 0 and siloId        != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value)
+  cid powerAccId    if (id > 0 and stationId     != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value)
+  cid powerExcId    if (id > 0 and powerAccId    != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + powerAccId.value)
+  cid warningId     if (id > 0 and powerExcId    != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + powerAccId.value + powerExcId.value)  // version >= 4
+  cid monitorId     if (id > 0 and warningId     != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + powerAccId.value + powerExcId.value + warningId.value)  // version >= 2
+  cid speakerId     if (id > 0 and monitorId     != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value)  // version >= 3
+  cid spraycoaterId if (id > 0 and speakerId     != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value + speakerId.value)  // version >= 5
+  cid pilerId       if (id > 0 and spraycoaterId != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value + speakerId.value + spraycoaterId.value)  // version >= 5
+  // seems stupid, but works
+}
+
+// inlined
+cid {
+  uint8 available
+  int24 value if (available > 0) default (0)
+}
+
+// inlined
+AnimData {
+  float32 time
+  float32 prepareLength
+  float32 workingLength
+  uint32 state
+  float32 power
+}
+
+// inlined
+SignData {
+  uint8 signType
+  uint8 iconType
+  uint16 iconId0
+  float32 count0 if (iconType & 0x80 != 0)
+  float32 x
+  float32 y
+  float32 z
+  float32 w
+}
+
+// inlined
+EntityConnPool {
+  uint8 available
+  int32 data if (available != 0)
+}
+
+// inlined
+PrebuildExportStruct {
+  PrebuildData prebuildData
+  EntityConnPool prebuildConnPool[16] if (prebuildData.id != 0)
+}
+
+PrebuildData {
+  uint8 version = 2
+  int32 id
+  int16 protoId if (id != 0)
+  int16 modelIndex if (id != 0)
+  float32 posX if (id != 0)
+  float32 posY if (id != 0)
+  float32 posZ if (id != 0)
+  float32 rotX if (id != 0)
+  float32 rotY if (id != 0)
+  float32 rotZ if (id != 0)
+  float32 rotW if (id != 0)
+  float32 pos2X if (id != 0)
+  float32 pos2Y if (id != 0)
+  float32 pos2Z if (id != 0)
+  float32 rot2X if (id != 0)
+  float32 rot2Y if (id != 0)
+  float32 rot2Z if (id != 0)
+  float32 rot2W if (id != 0)
+  int32 itemRequired if (id != 0)
+  int16 pickOffset if (id != 0)
+  int16 insertOffset if (id != 0)
+  int32 recipeId if (id != 0)
+  int32 filterId if (id != 0)
+  int32 warningId if (id != 0)  // version >= 2
+  int32 paramCount if (id != 0)
+  int32 parameters[paramCount] if (id != 0)
+}
+
+VegeData {
+  uint8 version = 0
+  int32 id
+  int16 protoId
+  int16 modelIndex
+  int16 hp
+  float32 posX
+  float32 posY
+  float32 posZ
+  float32 rotX
+  float32 rotY
+  float32 rotZ
+  float32 rotW
+  float32 sclX
+  float32 sclY
+  float32 sclZ
+}
+
+VeinData {
+  uint8 version = 0
+  int32 id
+  int16 type  // write as int16, but cast into uint8 during import
+  int16 modelIndex
+  int16 groupIndex
+  int32 amount
+  int32 productId
+  float32 posX
+  float32 posY
+  float32 posZ
+  int32 minerCount
+  int32 minerId0
+  int32 minerId1
+  int32 minerId2
+  int32 minerId3
+}
+
+CargoContainer {
+  int32 version = 2
+  int32 poolCapacity
+  int32 cursor
+  int32 recycleBegin
+  int32 recycleEnd
+  Cargo cargoPool[cursor]
+  int32 recycleIds[poolCapacity]
+}
+
+// inlined
+Cargo {
+  int16 item
+  uint8 stack  // version >= 2
+  uint8 inc // version >= 2
+}
+
+CargoTraffic {
+  int32 version = 3
+  int32 beltCursor
+  int32 beltCapacity
+  int32 beltRecycleCursor
+  int32 splitterCursor
+  int32 splitterCapacity
+  int32 splitterRecycleCursor
+  int32 pathCursor
+  int32 pathCapacity
+  int32 pathRecycleCursor
+  BeltComponent beltPool[beltCursor - 1]
+  int32 beltRecycle[beltRecycleCursor]
+  SplitterComponent splitterPool[splitterCursor - 1]
+  int32 splitterRecycle[splitterRecycleCursor]
+  CargoPathExportStruct pathPool[pathCursor - 1]
+  int32 pathRecycle[pathRecycleCursor]
+  int32 monitorCursor
+  int32 monitorCapacity
+  int32 monitorRecycleCursor
+  MonitorComponent monitorPool[monitorCursor - 1]
+  int32 monitorRecycle[monitorRecycleCursor]
+  int32 spraycoaterCursor
+  int32 spraycoaterCapacity
+  int32 spraycoaterRecycleCursor
+  SpraycoaterComponent spraycoaterPool[spraycoaterCursor - 1]
+  int32 spraycoaterRecycle[spraycoaterRecycleCursor]
+  int32 pilerCursor
+  int32 pilerCapacity
+  int32 pilerRecycleCursor
+  PilerComponent pilerPool[pilerCursor - 1]
+  int32 pilerRecycle[pilerRecycleCursor]
+}
+
+BeltComponent {
+  uint8 version = 1
+  FlexibleInt id
+  FlexibleInt entityId if (id != 0)
+  uint8 speed if (id != 0)
+  // changed from int32 to FlexibleInt since version 1
+  FlexibleInt segPathId if (id != 0)
+  FlexibleInt segIndex if (id != 0)
+  FlexibleInt segPivotOffset if (id != 0)
+  FlexibleInt segLength if (id != 0)
+  FlexibleInt outputId if (id != 0)
+  FlexibleInt backInputId if (id != 0)
+  FlexibleInt leftInputId if (id != 0)
+  FlexibleInt rightInputId if (id != 0)
+}
+
+SplitterComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 beltA
+  int32 beltB
+  int32 beltC
+  int32 beltD
+  int32 input0
+  int32 input1
+  int32 input2
+  int32 input3
+  int32 output0
+  int32 output1
+  int32 output2
+  int32 output3
+  boolean inPriority
+  boolean outPriority
+  int32 outFilter
+  uint8 prioritySlotPresets  // version >= 1
+  int16 outFilterPreset  // version >= 1
+}
+
+// inlined
+CargoPathExportStruct {
+  int32 available
+  CargoPath path if (available != 0)
+}
+
+MonitorComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 pcId
+  int32 speakerId
+  int32 targetBeltId
+  int8 offset
+  int32 targetCargoBytes  // int32 since version 1, uint16 in version 0
+  uint16 periodTickCount
+  uint16 prewarmSampleTick
+  FlexibleInt lastCargoId
+  FlexibleInt formerCargoId
+  FlexibleInt lastCargoOffset
+  uint8 lastCargoStack  // version >= 1
+  int8 cargoBytesArray[periodTickCount]
+  FlexibleInt periodCargoBytesArray[periodTickCount]
+  FlexibleInt totalCargoBytes
+  uint8 passColorId
+  uint8 failColorId
+  uint8 alarmMode
+  int32 cargoFilter
+  uint8 passOperator
+  FlexibleInt systemWarningMode
+  FlexibleInt systemWarningSignalId
+}
+
+CargoPath {
+  int32 version = 0
+  int32 id
+  int32 capacity
+  int32 bufferLength
+  int32 chunkCapacity
+  int32 chunkCount
+  int32 updateLen
+  boolean closed
+  int32 outputPathId
+  int32 outputIndex
+  int32 numBelts
+  int32 numInputPaths
+  uint8 buffer[bufferLength]
+  int32 chunks[chunkCount * 3]
+  CargoPosRot pointPosRot[bufferLength]
+  int32 belts[numBelts]
+  int32 inputPaths[numInputPaths]
+}
+
+// inlined
+CargoPosRot {
+  float32 pointPosX
+  float32 pointPosY
+  float32 pointPosZ
+  float32 pointRotX
+  float32 pointRotY
+  float32 pointRotZ
+  float32 pointRotW
+}
+
+SpraycoaterComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 pcId
+  FlexibleInt cargoBeltId
+  FlexibleInt incBeltId
+  FlexibleInt incItemId
+  FlexibleInt incAbility
+  FlexibleInt incSprayTimes
+  FlexibleInt incCount
+  FlexibleInt extraIncCount  // version >= 1
+  FlexibleInt incCapacity
+  FlexibleInt sprayTime
+}
+
+PilerComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 pcId
+  uint8 pilerState // PilerState { None, Pile, Split }
+  FlexibleInt inputBeltId
+  FlexibleInt outputBeltId
+  int16 cacheItemId1
+  uint8 cacheCargoStack1
+  uint8 cacheCargoInc1
+  int16 cacheItemId2  // version >= 1
+  uint8 cacheCargoStack2 // version >= 1
+  uint8 cacheCargoInc2 // version >= 1
+  uint8 cacheCdTick
+  int32 timeSpend
+}
+
+FactoryStorage {
+  int32 version = 0
+  int32 storageCursor
+  int32 storageCapacity
+  int32 storageRecycleCursor
+  StorageExportStruct storagePool[storageCursor - 1]
+  int32 storageRecycle[storageRecycleCursor]
+  int32 tankCapacity
+  int32 tankCursor
+  int32 tankRecycleCursor
+  TaskComponent tankPool[tankCursor - 1]
+  int32 tankRecycle[tankRecycleCursor]
+}
+
+// inlined
+StorageExportStruct {
+  int32 available
+  int32 storagePoolSize if (available != 0)
+  StorageComponent storage if (available != 0)
+}
+
+TaskComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 lastTankId
+  int32 nextTalkId
+  int32 belt0
+  int32 belt1
+  int32 belt2
+  int32 belt3
+  boolean isOutput0
+  boolean isOutput1
+  boolean isOutput2
+  boolean isOutput3
+  int32 fluidCapacity
+  int32 fluidCount
+  int32 fluidInc  // version >= 1
+  int32 fluidId
+  boolean outputSwitch
+  boolean inputSwitch
+  boolean isBottom
+}
+
+PowerSystem {
+  int32 version = 0
+  int32 genCapacity
+  int32 genCursor
+  int32 genRecycleCursor
+  PowerGeneratorComponent genPool[genCursor - 1]
+  int32 genRecycle[genRecycleCursor]
+  int32 nodeCapacity
+  int32 nodeCursor
+  int32 nodeRecycleCursor
+  PowerNodeComponent nodePool[nodeCursor - 1]
+  int32 nodeRecycle[nodeRecycleCursor]
+  int32 consumerCapacity
+  int32 consumerCursor
+  int32 consumerRecycleCursor
+  PowerConsumerComponent consumerPool[consumerCursor - 1]
+  int32 consumerRecycle[consumerRecycleCursor]
+  int32 accCapacity
+  int32 accCursor
+  int32 accRecycleCursor
+  PowerAccumulatorComponent accPool[accCursor - 1]
+  int32 accRecycle[accRecycleCursor]
+  int32 excCapacity
+  int32 excCursor
+  int32 excRecycleCursor
+  PowerExchangerComponent excPool[excCursor - 1]
+  int32 excRecycle[excRecycleCursor]
+  int32 netCapacity
+  int32 netCursor
+  int32 netRecycleCursor
+  PowerNetExportStruct netPool[netCursor]
+  int32 netRecycle[netRecycleCursor]
+}
+
+PowerGeneratorComponent {
+  int32 version = 3
+  int32 id
+  int32 entityId
+  uint8 subId  // version >= 1
+  int32 networkId
+  boolean photovoltaic
+  boolean wind
+  boolean gamma
+  boolean geothermal  // version >= 3
+  int64 genEnergyPerTick
+  int64 useFuelPerTick
+  int16 fuelMask
+  int64 fuelEnergy
+  int16 curFuelId
+  int16 fuelId
+  int16 fuelCount
+  int16 fuelInc  // version >= 2
+  boolean productive  // version >= 2
+  uint8 fuelIncLevel  // version >= 2
+  int64 fuelHeat
+  int32 catalystId
+  int32 catalystPoint
+  int32 catalystIncPoint  // version >= 2
+  int32 productId
+  float32 productCount
+  int64 productHeat
+  float32 warpup
+  float32 ionEnhance
+  float32 gthStrength
+  float32 x
+  float32 y
+  float32 z
+}
+
+// inline
+PowerNetExportStruct {
+  int32 available
+  PowerNetwork net if (available != 0)
+}
+
+PowerNodeComponent {
+  int32 version = 0
+  int32 id
+  int32 entityId
+  int32 networkId
+  boolean isCharger
+  int32 workEnergyPerTick
+  int32 idleEnergyPerTick
+  int32 requiredEnergy
+  float32 powerPointX
+  float32 powerPointY
+  float32 powerPointZ
+  float32 connectDistance
+  float32 coverRadius
+}
+
+PowerConsumerComponent {
+  int32 version = 0
+  int32 id
+  int32 entityId
+  int32 networkId
+  float32 plugPosX
+  float32 plugPosY
+  float32 plugPosZ
+  int64 requiredEnergy
+  int64 servedEnergy
+  int64 workEnergyPerTick
+  int64 idleEnergyPerTick
+}
+
+PowerAccumulatorComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  uint8 subId  // version >= 1
+  int32 networkId
+  int64 inputEnergyPerTick
+  int64 outputEnergyPerTick
+  int64 curEnergy
+  int64 maxEnergy
+}
+
+PowerExchangerComponent {
+  int32 version = 2
+  int32 id
+  int32 entityId
+  uint8 subId  // version >= 2
+  int32 networkId
+  int16 emptyCount
+  int16 fullCount
+  float32 targetState
+  float32 state
+  int64 energyPerTick
+  int64 currPoolEnergy
+  int64 maxPoolEnergy
+  int32 emptyId
+  int32 fullId
+  int32 belt0  // version >= 1
+  int32 belt1  // version >= 1
+  int32 belt2  // version >= 1
+  int32 belt3  // version >= 1
+  boolean isOutput0  // version >= 1
+  boolean isOutput1  // version >= 1
+  boolean isOutput2  // version >= 1
+  boolean isOutput3  // version >= 1
+  int32 outputSlot  // version >= 1
+  int32 inputSlot  // version >= 1
+  int32 outputRectify  // version >= 1
+  int32 inputRectify  // version >= 1
+}
+
+PowerNetwork {
+  int32 version = 0
+  int32 id
+  int32 numNodes
+  int32 numConsumers
+  int32 numGenerator
+  int32 numAccumulator
+  int32 numExchanger
+  PowerNetworkStructures nodes[numNodes]
+  int32 consumers[numConsumers]
+  int32 generators[numGenerator]
+  int32 accumulators[numAccumulator]
+  int32 exchangers[numExchanger]
+}
+
+PowerNetworkStructures {
+  int32 version = 0
+  int32 id
+  float32 x
+  float32 y
+  float32 z
+  float32 connDistance2
+  float32 coverRadius2
+  int32 genId
+  int32 accId
+  int32 excId
+  int32 numConns
+  int32 numLines
+  int32 numConsumers
+  int32 conns[numConns]
+  int32 lines[numLines]
+  int32 consumers[numConsumers]
+}
+
+FactorySystem {
+  int32 version = 0
+  int32 minerCapacity
+  int32 minerCursor
+  int32 minerRecycleCursor
+  MinerComponent minerPool[minerCursor - 1]
+  int32 minerRecycle[minerRecycleCursor]
+  int32 inserterCapacity
+  int32 inserterCursor
+  int32 inserterRecycleCursor
+  InserterComponent inserterPool[inserterCursor - 1]
+  int32 inserterRecycle[inserterRecycleCursor]
+  int32 assemblerCapacity
+  int32 assemblerCursor
+  int32 assemblerRecycleCursor
+  AssemblerComponent assemblerPool[assemblerCursor - 1]
+  int32 assemblerRecycle[assemblerRecycleCursor]
+  int32 fractionateCapacity
+  int32 fractionateCursor
+  int32 fractionateRecycleCursor
+  FractionateComponent fractionatePool[fractionateCursor - 1]
+  int32 fractionateRecycle[fractionateRecycleCursor]
+  int32 ejectorCapacity
+  int32 ejectorCursor
+  int32 ejectorRecycleCursor
+  EjectorComponent ejectorPool[ejectorCursor - 1]
+  int32 ejectorRecycle[ejectorRecycleCursor]
+  int32 siloCapacity
+  int32 siloCursor
+  int32 siloRecycleCursor
+  SiloComponent siloPool[siloCursor - 1]
+  int32 siloRecycle[siloRecycleCursor]
+  int32 labCapacity
+  int32 labCursor
+  int32 labRecycleCursor
+  LabComponent labPool[labCursor - 1]
+  int32 labRecycle[labRecycleCursor]
+}
+
+MinerComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 pcId
+  int32 type  // EMinerType { None, Water, Vein, Oil }
+  int32 speed
+  int32 speedDamper // version >= 1
+  int32 time
+  int32 period
+  int32 insertTarget
+  int32 workState  // EWorkState { Full=-2, Lack=-1, Idle=0, Running=1, Outputing=2 }
+  int32 numVeins
+  int32 veins[numVeins]
+  int32 currentVeinIndex
+  int32 minimumVeinAmount
+  int32 productId
+  int32 productCount
+  uint32 seed
+}
+
+InserterComponent {
+  int32 version = 2
+  int32 id
+  int32 entityId
+  int32 pcId
+  uint8 stage  // EInserterStage { Picking, Sending, Inserting, Returning }, int32 for version 0
+  uint8 speed  // divided by 10000 and convert to uint8, int32 for version 0 (no need to divide)
+  int32 time
+  int32 stt
+  int32 delay
+  int32 pickTarget
+  int32 insertTarget
+  boolean careNeeds
+  boolean canStack
+  int16 pickOffset
+  int16 insertOffset
+  int16 filter  // int32 for version 0
+  int16 itemId  // int32 for version 0
+  uint8 stackCount  // int32 for version 0
+  uint8 stackSize  // int32 for version 0
+  float32 pos2X
+  float32 pos2Y
+  float32 pos2Z
+  float32 rot2X
+  float32 rot2Y
+  float32 rot2Z
+  float32 rot2W
+  uint8 t1  // int16 for version 0
+  uint8 t2  // int16 for version 0
+  int16 itemCount  // version >= 2
+  int16 itemInc  // version >= 2
+}
+
+AssemblerComponent {
+  int32 version = 3
+  int32 id
+  int32 entityId
+  int32 pcId
+  boolean replicating
+  boolean reserved = 0  // always false
+  int32 speed
+  int32 time
+  int32 speedOverride  // version >= 2
+  int32 extraTime  // version >= 2
+  int32 extraSpeed  // version >= 2
+  int32 extraPowerRatio  // version >= 2
+  boolean productive  // version >= 2
+  boolean forceAccMode  // version >= 3
+  int16 recipeId  // int32 for version 0
+  uint8 recipeType if (recipeId > 0)
+  int32 timeSpend if (recipeId > 0)
+  int32 extraTimeSpend if (recipeId > 0)  // version >= 2
+  uint8 numRequires if (recipeId > 0)
+  int16 requires[numRequires] if (recipeId > 0)
+  uint8 numRequireCounts if (recipeId > 0)
+  int16 requireCounts[numRequireCounts] if (recipeId > 0)
+  uint8 numServed if (recipeId > 0)
+  int32 served[numServed] if (recipeId > 0)
+  uint8 numIncServed if (recipeId > 0)  // version >= 2
+  int32 incServed[numIncServed] if (recipeId > 0)  // version >= 2
+  uint8 numNeeds if (recipeId > 0)
+  int16 needs[numNeeds] if (recipeId > 0)
+  uint8 numProducts if (recipeId > 0)
+  int16 products[numProducts] if (recipeId > 0)
+  uint8 numProductCounts if (recipeId > 0)
+  int16 productCounts[numProductCounts] if (recipeId > 0)
+  uint8 numProduced if (recipeId > 0)
+  int32 produced[numProduced] if (recipeId > 0)
+}
+
+FractionateComponent {
+  int32 version = 3
+  int32 id
+  int32 entityId
+  int32 pcId
+  int32 belt0
+  int32 belt1
+  int32 belt2
+  boolean isOutput0
+  boolean isOutput1
+  boolean isOutput2
+  boolean isWorking
+  float32 produceProb
+  int32 fluidId
+  int32 productId
+  int32 fluidInputCount
+  int32 fluidInputInc  // version >= 2
+  float32 fluidInputCargoCount  // version >= 2, int32 for version 2
+  int32 productOutputCount
+  int32 fluidOutputCount
+  int32 fluidOutputInc  // version >= 2
+  int32 ignored  // version >= 2, equals to fluidOutputCount
+  int32 progress
+  boolean reserved = 0  // always false
+  boolean fractionateSuccess
+  int32 fluidInputMax
+  int32 productOutputMax
+  int32 fluidOutputMax
+  int32 fluidOutputTotal  // version >= 1
+  int32 productOutputTotal  // version >= 1
+  uint32 seed
+}
+
+EjectorComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 planetId
+  int32 pcId
+  int32 direction
+  int32 time
+  boolean fired
+  int32 chargeSpend
+  int32 coldSpend
+  int32 bulletId
+  int32 bulletCount
+  int32 bulletInc  // version >= 1
+  int32 orbitId
+  float32 pivotY
+  float32 muzzleY
+  float32 localPosNX
+  float32 localPosNY
+  float32 localPosNZ
+  float32 localAlt
+  float32 localRotX
+  float32 localRotY
+  float32 localRotZ
+  float32 localRotW
+  float32 localDirX
+  float32 localDirY
+  float32 localDirZ
+}
+
+SiloComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  int32 planetId
+  int32 pcId
+  int32 direction
+  int32 time
+  boolean fired
+  int32 chargeSpend
+  int32 coldSpend
+  int32 bulletId
+  int32 bulletCount
+  int32 bulletInc  // version >= 1
+  int32 autoIndex
+  boolean hasNode
+  float32 localPosX
+  float32 localPosY
+  float32 localPosZ
+  float32 localRotX
+  float32 localRotY
+  float32 localRotZ
+  float32 localRotW
+}
+
+LabComponent {
+  int32 version = 2
+  int32 id
+  int32 entityId
+  int32 pcId
+  int32 nextLabId
+  boolean replicating
+  boolean reserved = 0  // always false
+  int32 time
+  int32 hashBytes
+  int32 extraHashBytes  // version >= 1
+  int32 extraTime  // version >= 1
+  int32 extraSpeed  // version >= 1
+  int32 extraPowerRatio  // version >= 1
+  boolean productive  // version >= 1
+  boolean forceAccMode  // version >= 2
+  int32 speed  // version >= 2
+  int32 speedOverride  // version >= 2
+  boolean researchMode
+  int32 recipeId
+  int32 techId
+  // matrix mode
+  int32 timeSpend if (not researchMode and recipeId > 0)
+  int32 extraTimeSpend if (not researchMode and recipeId > 0)  // version >= 1
+  int32 numRequires if (not researchMode and recipeId > 0)
+  int32 requires[numRequires] if (not researchMode and recipeId > 0)
+  int32 numRequireCounts if (not researchMode and recipeId > 0)
+  int32 requireCounts[numRequireCounts] if (not researchMode and recipeId > 0)
+  int32 numServed if (not researchMode and recipeId > 0)
+  int32 served[numServed] if (not researchMode and recipeId > 0)
+  int32 numIncServed if (not researchMode and recipeId > 0)  // version >= 1
+  int32 incServed[numIncServed] if (not researchMode and recipeId > 0)  // version >= 1
+  int32 numNeeds if (not researchMode and recipeId > 0)
+  int32 needs[numNeeds] if (not researchMode and recipeId > 0)
+  int32 numProducts if (not researchMode and recipeId > 0)
+  int32 products[numProducts] if (not researchMode and recipeId > 0)
+  int32 numProductCounts if (not researchMode and recipeId > 0)
+  int32 productCounts[numProductCounts] if (not researchMode and recipeId > 0)
+  int32 numProduced if (not researchMode and recipeId > 0)
+  int32 produced[numProduced] if (not researchMode and recipeId > 0)
+  // research mode
+  int32 numMatrixPoints if (researchMode)
+  int32 matrixPoints[numMatrixPoints] if (researchMode)
+  int32 numMatrixServed if (researchMode)
+  int32 matrixServed[numMatrixServed] if (researchMode)
+  int32 numMatrixNeeds if (researchMode)
+  int32 matrixNeeds[numMatrixNeeds] if (researchMode)
+  int32 numMatrixIncServed if (researchMode)  // version >= 1
+  int32 matrixIncServed[numMatrixIncServed] if (researchMode)  // version >= 1
+}
+
+PlanetTransport {
+  int32 version = 0
+  int32 stationCursor
+  int32 stationCapacity
+  int32 stationRecycleCursor
+  StationComponentExportStruct stationPool[stationCursor - 1]
+  int32 stationRecycle[stationRecycleCursor]
+}
+
+// inlined
+StationComponentExportStruct {
+  int32 available
+  StationComponent station if (available != 0)
+}
+
+StationComponent {
+  int32 version = 4
+  int32 id
+  int32 gid
+  int32 entityId
+  int32 planetId
+  int32 pcId
+  int32 minerId  // version >= 3
+  int32 gene
+  float32 droneDockX
+  float32 droneDockY
+  float32 droneDockZ
+  float32 shipDockPosX
+  float32 shipDockPosY
+  float32 shipDockPosZ
+  float32 shipDockRotX
+  float32 shipDockRotY
+  float32 shipDockRotZ
+  float32 shipDockRotW
+  boolean isStellar
+  int32 hasName
+  string name if (hasName != 0)
+  int64 energy
+  int64 energyPerTick
+  int64 energyMax
+  int32 warperCount
+  int32 warperMaxCount
+  int32 idleDroneCount
+  int32 workDroneCount
+  int32 numWorkDroneDatas
+  DroneData workDroneDatas[workDroneCount]
+  LocalLogisticOrder workDroneOrders[workDroneCount]
+  int32 idleShipCount
+  int32 workShipCount
+  uint64 idleShipIndices
+  uint64 workShipIndices
+  int32 numWorkShipDatas
+  ShipData workShipDatas[workShipCount]
+  RemoteLogisticOrder workShipOrders[workShipCount]
+  int32 numStorage
+  StationStore storage[numStorage]
+  int32 numSlots  // version >= 1
+  SlotData slots[numSlots]  // version >= 1
+  int32 localPairProcess
+  int32 remotePairProcess
+  int32 nextShipIndex
+  boolean isCollector
+  boolean isVeinCollector  // version >= 3
+  int32 numCollectionIds
+  int32 collectionIds[numCollectionIds]
+  int32 numCollectionPerTick
+  float32 collectionPerTick[numCollectionPerTick]
+  int32 numCurrentCollections
+  float32 currentCollections[numCurrentCollections]
+  int32 collectSpeed
+  float64 tripRangeDrones  // version >= 2
+  float64 tripRangeShips  // version >= 2
+  boolean includeOrbitCollector  // version >= 2
+  float64 warpEnableDist  // version >= 2
+  boolean warperNecessary  // version >= 2
+  int32 deliveryDrone  // version >= 2
+  int32 deliveryShips  // version >= 2
+  int32 pilerCount  // version >= 4
+}
+
+// inlined
+SlotData {
+  int32 dir
+  int32 beltId
+  int32 storageIdx
+  int32 counter
+}
+
+DroneData {
+  int32 version = 1
+  float32 beginX
+  float32 beginY
+  float32 beginZ
+  float32 endX
+  float32 endY
+  float32 endZ
+  int32 endId
+  float32 direction
+  float32 maxt
+  float32 t
+  int32 itemId
+  int32 itemCount
+  int32 inc  // version >= 1
+  int32 gene
+}
+
+LocalLogisticOrder {
+  int32 version = 0
+  int32 otherStationId
+  int32 thisIndex
+  int32 otherIndex
+  int32 itemId
+  int32 thisOrdered
+  int32 otherOrdered
+}
+
+ShipData {
+  int32 version = 1
+  int32 stage
+  int32 planetA
+  int32 planetB
+  float64 uPosX
+  float64 uPosY
+  float64 uPosZ
+  float32 uVelX
+  float32 uVelY
+  float32 uVelZ
+  float32 uSpeed
+  float32 warpState
+  float32 uRotX
+  float32 uRotY
+  float32 uRotZ
+  float32 uRotW
+  float32 uAngularVelX
+  float32 uAngularVelY
+  float32 uAngularVelZ
+  float32 uAngularSpeed
+  float64 pPosTempX
+  float64 pPosTempY
+  float64 pPosTempZ
+  float32 pRotTempX
+  float32 pRotTempY
+  float32 pRotTempZ
+  float32 pRotTempW
+  int32 otherGId
+  int32 direction
+  float32 t
+  int32 itemId
+  int32 itemCount
+  int32 inc  // version >= 1
+  int32 gene
+  int32 shipIndex
+  int32 warperCnt
+}
+
+// same as LocalLogisticOrder as for now
+RemoteLogisticOrder {
+  int32 version = 0
+  int32 otherStationId
+  int32 thisIndex
+  int32 otherIndex
+  int32 itemId
+  int32 thisOrdered
+  int32 otherOrdered
+}
+
+StationStore {
+  int32 version = 1
+  int32 itemId
+  int32 count
+  int32 inc
+  int32 localOrder
+  int32 remoteOrder
+  int32 max
+  int32 localLogic  // ELogisticStorage { None, Supply, Demand }
+  int32 remoteLogic
+}
+
+PlatformSystem {
+  int32 version = 1
+  int32 numReformData
+  uint8 reformData[numReformData]
+  int32 latitudeCount  // + 1
+  int32 reformOffsets[latitudeCount]
+  int32 numReformCustomColors
+  RGBAF reformCustomColors[numReformCustomColors]  // version >= 1
+}
+
+RGBAF {
+  float32 r
+  float32 g
+  float32 b
+  float32 a
+}
+
+DigitalSystem {
+  int32 version = 0
+  int32 speakerCapacity
+  int32 speakerCursor
+  int32 speakerRecycleCursor
+  SpeakerComponent speakerPool[speakerCursor - 1]
+  int32 speakerRecycle[speakerRecycleCursor]
+}
+
+SpeakerComponent {
+  int32 version = 1
+  int32 id
+  int32 entityId
+  uint8 tone
+  uint8 volume
+  uint8 pitch
+  boolean playing
+  int32 audioId
+  int32 oneShotAudioId
+  float32 time
+  float32 length
+  float32 speed
+  boolean isInstrument
+  boolean repeat
+  int32 repeatTimes
+  float32 volumeFade
+  float32 fadeTarget
+  float32 fadeInDuration
+  float32 fadeOutDuration
+  float32 falloffRadius0  // version >= 1
+  float32 falloffRadius1  // version >= 1
+}
+
+// inlined
+DysonSphereExportStruct {
+  int32 available
+  DysonSphere sphere if (available != 0)
+}
+
+DysonSphere {
+  int32 version == 3
+  int32 randSeed
+  DysonSwarm swarm
+  int32 reserved = 1212  // constant
+  int32 layerCount
+  int32 numLayersIdBased
+  DysonSphereLayerExportStruct layersIdBased[numLayersIdBased - 1]
+  int32 rocketCapacity
+  int32 rocketCursor
+  int32 rocketRecycleCursor
+  DysonRocket rocketPool[rocketCursor - 1]
+  int32 rocketRecycle[rocketRecycleCursor]
+  int32 autoNodeCount
+  int32 numAutoNodes
+  DysonAutoNode autoNodes[numAutoNodes]
+  int32 nrdCapacity
+  int32 nrdCursor
+  int32 nrdRecycleCursor
+  DysonNodeRData nrdPool[nrdCursor - 1]
+  int32 nrdRecycle[nrdRecycleCursor]
+  int32 inEditorRenderMaskL
+  int32 inEditorRenderMaskS
+  int32 inGameRenderMaskL
+  int32 inGameRenderMaskS
+} // todo: check version
+
+// inlined
+DysonSphereLayerExportStruct {
+  int32 available
+  DysonSphereLayer layer if (available != 0)
+}
+
+// inlined
+DysonAutoNode {
+  int32 available
+  int32 layerId if (available != 0)
+  int32 id if (available != 0)
+}
+
+DysonSwarm {
+  int32 version = 6
+  int32 randSeed
+  int32 sailCapacity
+  int32 sailCursor
+  int32 sailRecycleCursor
+  DysonSailExportStruct1 sailPoolForSave[sailCursor]
+  DysonSailExportStruct2 sailInfos[sailCursor] props (sailPoolForSave[i].st)
+  int32 sailRecycle[sailRecycleCursor]
+  int32 orbitCapacity
+  int32 orbitCursor
+  SailOrbit orbits[orbitCursor - 1]
+  int32 numExpiryOrder = sailCapacity
+  int32 expiryCursor
+  int32 expiryEnding
+  ExpiryOrder expiryOrder[numExpiryOrder]
+  int32 numAbsorbOrder = sailCapacity // version >= 2
+  int32 absorbCursor // version >= 2
+  int32 absorbEnding // version >= 2
+  AbsorbOrder absorbOrder[numAbsorbOrder] // version >= 2
+  int32 numOrbitColors // version >= 6
+  HSVAF orbitColorsHSVA[numOrbitColors] // version >= 6
+  int32 bulletCapacity
+  int32 bulletCursor
+  int32 bulletRecycleCursor
+  SailBullet bulletPool[bulletCursor - 1]
+  int32 bulletRecycle[bulletRecycleCursor]
+}
+
+// inlined
+HSVAF {
+  float32 h
+  float32 s
+  float32 v
+  float32 a
+}
+
+// inlined
+DysonSailExportStruct1 {
+  float32 st
+  float32 px if (st >= 0.001)
+  float32 py if (st >= 0.001)
+  float32 pz if (st >= 0.001)
+  float32 vx if (st >= 0.001)
+  float32 vy if (st >= 0.001)
+  float32 vz if (st >= 0.001)
+  float32 gs if (st >= 0.001)
+}
+
+// inlined
+DysonSailExportStruct2 {
+  injected float32 st = 0
+  int16 orbit if (st >= 0.001) // int16 for version >= 5, else uint32
+  uint32 node if (st >= 0.001) // version >= 3
+  uint32 kill if (st >= 0.001) // version >= 3
+  float32 posrX if (st >= 0.001) // version >= 4
+  float32 posrY if (st >= 0.001) // version >= 4
+  float32 posrZ if (st >= 0.001) // version >= 4
+}
+
+// inlined
+ExpiryOrder {
+  int64 time
+  int32 index
+}
+
+// inlined
+AbsorbOrder {
+  int64 time
+  int32 index
+  int32 layer
+  int32 node
+}
+
+SailOrbit {
+  int32 version = 0
+  int32 id
+  float32 radius
+  float32 rotationX
+  float32 rotationY
+  float32 rotationZ
+  float32 rotationW
+  float32 upX
+  float32 upY
+  float32 upZ
+  int32 count
+  boolean enabled
+}
+
+SailBullet {
+  int32 version = 0
+  int32 id
+  float32 t
+  float32 maxt
+  int32 state
+  float32 rBeginX
+  float32 rBeginY
+  float32 rBeginZ
+  float32 rEndX
+  float32 rEndY
+  float32 rEndZ
+  float32 lBeginX
+  float32 lBeginY
+  float32 lBeginZ
+  float32 uEndVelX
+  float32 uEndVelY
+  float32 uEndVelZ
+  float64 uBeginX
+  float64 uBeginY
+  float64 uBeginZ
+  float64 uEndX
+  float64 uEndY
+  float64 uEndZ
+}
+
+DysonSphereLayer {
+  int32 version = 2
+  int32 id
+  float32 orbitRadius
+  float32 orbitRotationX
+  float32 orbitRotationY
+  float32 orbitRotationZ
+  float32 orbitRotationW
+  float32 targetOrbitRotationX  // version >= 1
+  float32 targetOrbitRotationY  // version >= 1
+  float32 targetOrbitRotationZ  // version >= 1
+  float32 targetOrbitRotationW  // version >= 1
+  float32 orbitAngularSpeed
+  float32 currentAngle
+  float32 currentRotationX
+  float32 currentRotationY
+  float32 currentRotationZ
+  float32 currentRotationW
+  float32 nextRotationX
+  float32 nextRotationY
+  float32 nextRotationZ
+  float32 nextRotationW
+  int32 drawingGridMode  // renamed from gridMode in version 2
+  int32 paintingGridMode  // version >= 2
+  ColorExportStruct colors  // version >= 2
+  int32 nodeCapacity
+  int32 nodeCursor
+  int32 nodeRecycleCursor
+  DysonNodeExportStruct nodePool[nodeCursor - 1]
+  int32 nodeRecycle[nodeRecycleCursor]
+  int32 frameCapacity
+  int32 frameCursor
+  int32 frameRecycleCursor
+  DysonFrameExportStruct framePool[frameCursor - 1]
+  int32 frameRecycle[frameRecycleCursor]
+  int32 shellCapacity
+  int32 shellCursor
+  int32 shellRecycleCursor
+  DysonShellExportStruct shellPool[shellCursor - 1]
+  int32 shellRecycle[shellRecycleCursor]
+}
+
+// inlined
+ColorExportStruct {
+  boolean available
+  int32 numCellColors if (available)
+  RGBA cellColors[numCellColors] if (available)
+}
+
+// inlined
+DysonNodeExportStruct {
+  int32 index
+  DysonNode node if (index != 0)
+}
+
+// inlined
+DysonFrameExportStruct {
+  int32 index
+  DysonFrame frame if (index != 0)
+}
+
+// inlined
+DysonShellExportStruct {
+  int32 index
+  DysonShell shell if (index != 0)
+}
+
+DysonNode {
+  int32 version = 5
+  int32 id
+  int32 protoId
+  int32 layerId
+  boolean use
+  boolean reserved
+  float32 posX
+  float32 posY
+  float32 posZ
+  int32 sp
+  int32 spMax
+  int32 spOrdered
+  int32 cpOrdered  // version >= 3
+  int32 rid  // version >= 2
+  int32 frameTurn
+  int32 shellTurn  // version >= 1
+  int32 spReq
+  int32 cpReq  // version >= 4
+  RGBA color  // version >= 5
+}
+
+DysonFrame {
+  int32 version = 1
+  int32 id
+  int32 protoId
+  int32 layerId
+  boolean reserved
+  int32 nodeAId
+  int32 nodeBId
+  boolean euler
+  int32 spA
+  int32 spB
+  int32 spMax
+  RGBA color  // version >= 1
+}
+
+DysonShell {
+  int32 version = 3
+  int32 id
+  int32 protoId
+  int32 layerId
+  int32 randSeed
+  RGBA color  // version >= 3
+  int32 numNodes
+  int32 nodesId[numNodes]
+  float64 radius
+  int32 gridScale
+  int32 numPolygon
+  VectorLF polygon[numPolygon]
+  int32 numPolyn
+  VectorLF polyn[numPolyn]
+  int32 numPolynu
+  float64 polynu[numPolynu]
+  boolean clockwise
+  float64 centerX
+  float64 centerY
+  float64 centerZ
+  float64 xaxisX
+  float64 xaxisY
+  float64 xaxisZ
+  float64 yaxisX
+  float64 yaxisY
+  float64 yaxisZ
+  float64 w0axisX
+  float64 w0axisY
+  float64 w0axisZ
+  float64 w1axisX
+  float64 w1axisY
+  float64 w1axisZ
+  float64 w2axisX
+  float64 w2axisY
+  float64 w2axisZ
+  float64 t0axisX
+  float64 t0axisY
+  float64 t0axisZ
+  float64 t1axisX
+  float64 t1axisY
+  float64 t1axisZ
+  float64 t2axisX
+  float64 t2axisY
+  float64 t2axisZ
+  float64 raydirX
+  float64 raydirY
+  float64 raydirZ
+  int32 vertexCount
+  DysonVertexStruct vertex[vertexCount]
+  int32 numVertsq = vertexCount
+  int16 vertsq[numVertsq]
+  int32 numVertsqOffset
+  int16 vertsqOffset[numVertsqOffset]
+  int32 numNodecps
+  int32 nodecps[numNodecps]
+}
+
+VectorLF {
+  float64 x
+  float64 y
+  float64 z
+}
+
+// inlined
+DysonVertexStruct {
+  float32 vertX
+  float32 vertY
+  float32 vertZ
+  float32 uvX
+  float32 uvY
+  float32 uv2X
+  float32 uv2Y
+  int32 vkey
+  int16 vAdj[6]
+  int32 vertAttr
+}
+
+DysonRocket {
+  int32 version = 0
+  int32 id
+  int32 nodeLayerId
+  int32 nodeId
+  int32 planetId
+  float32 t
+  float32 uSpeed
+  float64 uPosX
+  float64 uPosY
+  float64 uPosZ
+  float32 uRotX
+  float32 uRotY
+  float32 uRotZ
+  float32 uRotW
+  float32 uVelX
+  float32 uVelY
+  float32 uVelZ
+  float32 launchX
+  float32 launchY
+  float32 launchZ
+}
+
+DysonNodeRData {
+  int32 version = 0
+  int32 id
+  int32 layerId
+  float32 posX
+  float32 posY
+  float32 posZ
+  float32 angularVel
+  float32 layerRotX
+  float32 layerRotY
+  float32 layerRotZ
+  float32 layerRotW
+}
+
+GameAbnormalityData {
+  int32 version = 0
+  int32 reserved2 = 0
+  int32 flag  // = 3, when flag = 1 or 2, method "ClearAbnormality" is called
+  int32 numRow  // = 99
+  GameAbnormalityDataRow row[numRow]
+}
+
+// inlined
+GameAbnormalityDataRow {
+  int32 numCol  // = 30
+  AbnormalityData data[numCol]
+}
+
+AbnormalityData {
+  uint8 version = 0
+  uint8 protoId
+  int64 abnormalTime if (protoId > 0)
+  int32 numEvidences if (protoId > 0)
+  int64 evidences[numEvidences] if (protoId > 0)
+}
+
+MilestoneSystem {
+  int32 version = 0
+  int32 numMilestoneDatas
+  KeyValuePairInt32MilestoneData milestoneDatas[numMilestoneDatas]
+}
+
+// inlined
+KeyValuePairInt32MilestoneData {
+  int32 key
+  MilestoneData value
+}
+
+MilestoneData {
+  int32 version = 0
+  int32 protoId
+  int64 unlockTick
+  JournalData journalData
+}
+
+WarningSystem {
+  int32 version = 0
+  int32 warningCapacity
+  int32 warningCursor
+  int32 warningRecycleCursor
+  WarningPool warningPool[warningCursor - 1]
+  int32 warningRecycle[warningRecycleCursor]
+}
+
+WarningPool {
+  int32 version = 0
+  int32 id
+  int32 state
+  int32 signalId
+  int32 factoryId
+  int32 astroId
+  int32 objectId
+  float32 localPosX
+  float32 localPosY
+  float32 localPosZ
+}
