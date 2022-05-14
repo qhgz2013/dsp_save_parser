@@ -3,7 +3,7 @@
 // majorGameVersion: 0
 // minorGameVersion: 9
 // releaseGameVersion: 25
-// buildGameVersion: 12077
+// buildGameVersion: 12201
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -79,7 +79,7 @@ DysonSphereData {
 }
 
 GameDesc {
-  int32 version = 6
+  int32 version = 7
   int64 creationTick // version >= 3
   int32 creationVersionMajor // version >= 6
   int32 creationVersionMinor // version >= 6
@@ -93,6 +93,8 @@ GameDesc {
   int32 numSavedThemeIds // version >= 1
   int32 savedThemeIds[numSavedThemeIds] // version >= 1
   boolean achievementEnable // version >= 4
+  boolean isPeaceMode // version >= 7
+  boolean isSandboxMode // version >= 7
 }
 
 GameAchievementData {
