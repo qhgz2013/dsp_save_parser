@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 9
-// releaseGameVersion: 25
-// buildGameVersion: 12201
+// releaseGameVersion: 26
+// buildGameVersion: 12913
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -12,7 +12,9 @@
 GameSave {
   VFSaveHeader header
   int64 fileLength
-  int32 version = 6
+  int32 version = 7
+  boolean isSandboxMode // version >= 7
+  boolean isPeaceMode // version >= 7
   int32 majorGameVersion
   int32 minorGameVersion
   int32 releaseGameVersion
@@ -170,7 +172,7 @@ AstroName {
 }
 
 GameHistoryData {
-  int32 version = 8
+  int32 version = 9
   int32 numRecipeUnlocked
   int32 recipeUnlocked[numRecipeUnlocked]
   int32 numTutorialUnlocked // version >= 2
@@ -215,6 +217,7 @@ GameHistoryData {
   KeyValuePairInt32Int32 propertyDataProduction[numPropertyDataProduction] // version >= 8, key: itemId, value: count
   int32 numPropertyDataConsumption // version >= 8
   KeyValuePairInt32Int32 propertyDataConsumption[numPropertyDataConsumption] // version >= 8, key: itemId, value: count
+  boolean createWithSandboxMode // version >= 9
 }
 
 TechState {
@@ -945,7 +948,7 @@ CargoPathExportStruct {
 }
 
 MonitorComponent {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 entityId
   int32 pcId
@@ -969,6 +972,8 @@ MonitorComponent {
   uint8 passOperator
   FlexibleInt systemWarningMode
   FlexibleInt systemWarningSignalId
+  uint8 spawnItemOperator // version >= 2
+  float32 spawnItemAccumulator // version >= 2
 }
 
 CargoPath {
@@ -1115,7 +1120,7 @@ PowerSystem {
 }
 
 PowerGeneratorComponent {
-  int32 version = 3
+  int32 version = 4
   int32 id
   int32 entityId
   uint8 subId  // version >= 1
@@ -1147,6 +1152,7 @@ PowerGeneratorComponent {
   float32 x
   float32 y
   float32 z
+  boolean boost // version >= 4
 }
 
 // inline
@@ -1424,7 +1430,7 @@ FractionateComponent {
 }
 
 EjectorComponent {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 entityId
   int32 planetId
@@ -1440,6 +1446,7 @@ EjectorComponent {
   int32 orbitId
   float32 pivotY
   float32 muzzleY
+  boolean boost // version >= 2
   float32 localPosNX
   float32 localPosNY
   float32 localPosNZ
@@ -1454,7 +1461,7 @@ EjectorComponent {
 }
 
 SiloComponent {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 entityId
   int32 planetId
@@ -1469,6 +1476,7 @@ SiloComponent {
   int32 bulletInc  // version >= 1
   int32 autoIndex
   boolean hasNode
+  boolean boost // version >= 2
   float32 localPosX
   float32 localPosY
   float32 localPosZ
@@ -1804,7 +1812,7 @@ DysonAutoNode {
 }
 
 DysonSwarm {
-  int32 version = 6
+  int32 version = 7
   int32 randSeed
   int32 sailCapacity
   int32 sailCursor
@@ -1819,6 +1827,7 @@ DysonSwarm {
   int32 expiryCursor
   int32 expiryEnding
   ExpiryOrder expiryOrder[numExpiryOrder]
+  boolean eternal // version >= 7
   int32 numAbsorbOrder = sailCapacity // version >= 2
   int32 absorbCursor // version >= 2
   int32 absorbEnding // version >= 2
