@@ -2,7 +2,7 @@
 
 A python based save data parser for Dyson Sphere Program.
 
-Current version: `0.9.26.12913` (Updated on 13 Jun, 2022)
+Current version: `0.9.27.14659` (Updated on 1 October, 2022)
 
 ## Usage
 

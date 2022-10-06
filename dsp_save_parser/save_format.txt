@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 9
-// releaseGameVersion: 26
-// buildGameVersion: 12913
+// releaseGameVersion: 27
+// buildGameVersion: 14659
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -47,31 +47,31 @@ AccountData {
 
 GameData {
   int32 version = 9
-  int32 patch = 6
-  AccountData accountData // repeated
+  int32 patch = 8 // version >= 4
+  AccountData accountData // repeated, version >= 3
   string gameName
   GameDesc gameDesc
   int64 gameTick
-  GameAchievementData gameAchievement
-  GamePrefsData preferences
+  GameAchievementData gameAchievement // version >= 7
+  GamePrefsData preferences // version >= 1
   GameHistoryData history
-  boolean hidePlayerModel
-  boolean disableController
+  boolean hidePlayerModel // version >= 2
+  boolean disableController // version >= 2
   GameStatData statistics
   int32 planetId
   Player mainPlayer
   int32 factoryCount
   GalacticTransport galacticTransport
-  TrashSystem trashSystem
+  TrashSystem trashSystem // version >= 5
   PlanetFactory factories[factoryCount]
   int32 dysonSpheresCount
   DysonSphereExportStruct dysonSpheres[dysonSpheresCount]
   // todo: check these two fields
   int32 zero1 // = 0
   int32 zero2 // = 0
-  GameAbnormalityData gameAbnormality
-  MilestoneSystem milestoneSystem
-  WarningSystem warningSystem
+  GameAbnormalityData gameAbnormality // GameAbnormalityData_0925
+  MilestoneSystem milestoneSystem // version >= 7
+  WarningSystem warningSystem // version >= 9
 }
 
 // used in GameData, inlined
@@ -123,7 +123,7 @@ AchievementRuntimeData_Fractinator {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 7
+  int32 version = 8
   float64 cameraUPosX
   float64 cameraUPosY
   float64 cameraUPosZ
@@ -158,6 +158,7 @@ GamePrefsData {
   boolean dismantleFilterBelt // version >= 4
   boolean dismantleFilterInserter // version >= 4
   boolean dysonSphereHideFarSideInEditor // version >= 6
+  boolean dysonSphereHideRocketBodies // version >= 8
 }
 
 KeyValuePairInt32Int32 {
@@ -172,7 +173,7 @@ AstroName {
 }
 
 GameHistoryData {
-  int32 version = 9
+  int32 version = 10
   int32 numRecipeUnlocked
   int32 recipeUnlocked[numRecipeUnlocked]
   int32 numTutorialUnlocked // version >= 2
@@ -202,6 +203,10 @@ GameHistoryData {
   float32 logisticShipSailSpeedScale
   boolean logisticShipWarpDrive
   int32 logisticShipCarries
+  float32 logisticCourierSpeed // version >= 10
+  float32 logisticCourierSpeedScale //version >= 10
+  int32 logisticCourierCarries // version >= 10
+  float32 dispenserDeliveryMaxAngle // version >= 10
   float32 miningCostRate
   float32 miningSpeedScale
   int32 storageLevel
@@ -294,7 +299,7 @@ PowerStat {
 }
 
 Player {
-  int32 version = 2
+  int32 version = 3
   int32 planetId
   float32 positionX
   float32 positionY
@@ -317,8 +322,31 @@ Player {
   int32 inhandItemInc // version >= 2
   Mecha mecha
   StorageComponent package
+  DeliveryPackage deliveryPackage // version >= 3
   PlayerNavigation navigation // version >= 1
   int32 sandCount
+}
+
+DeliveryPackage {
+  int32 version = 0
+  int32 gridCount
+  int32 stackSizeMultiplier
+  DeliveryPackageGrid grid[gridCount]
+  boolean enable
+  boolean unlocked
+  int32 rowCount // maximum 20
+  int32 colCount // maximum 5
+}
+
+// inlined
+DeliveryPackageGrid {
+  int32 itemId
+  int32 count if (itemId > 0)
+  int32 inc if (itemId > 0)
+  int32 ordered if (itemId > 0)
+  int32 stackSize if (itemId > 0)
+  int32 requiredCount if (itemId > 0)
+  int32 recycleCount if (itemId > 0)
 }
 
 Mecha {
@@ -643,7 +671,7 @@ TrashData {
 }
 
 PlanetFactory {
-  int32 version = 6
+  int32 version = 7
   int32 planetId
   int32 planetTheme
   int32 planetAlgoId
@@ -710,7 +738,7 @@ EntityExportStruct {
 }
 
 EntityData {
-  uint8 version = 5
+  uint8 version = 6
   int32 id
   int16 protoId if (id > 0)
   int16 modelIndex if (id > 0)
@@ -1538,12 +1566,84 @@ LabComponent {
 }
 
 PlanetTransport {
-  int32 version = 0
+  int32 version = 1
   int32 stationCursor
   int32 stationCapacity
   int32 stationRecycleCursor
   StationComponentExportStruct stationPool[stationCursor - 1]
   int32 stationRecycle[stationRecycleCursor]
+  int32 dispenserCapacity // version >= 1
+  int32 dispenserCursor // version >= 1
+  int32 dispenserRecycleCursor // version >= 1
+  DispenserExportStruct dispenserPool[dispenserCursor - 1] // version >= 1
+  int32 dispenserRecycle[dispenserRecycleCursor] // version >= 1
+}
+
+// inlined
+DispenserExportStruct {
+  int32 id
+  DispenserComponent dispenser if (id > 0)
+}
+
+DispenserComponent {
+  int32 version = 0
+  int32 id // same as DispenserExportStruct.id
+  int32 entityId
+  int32 pcId
+  int32 storageId
+  int32 gene
+  int64 energy
+  int64 energyPerTick
+  int64 energyMax
+  int32 playerMode // EPlayerDeliveryMode { None, Recycle, Both, Supply }
+  int32 storageMode // EStorageDeliveryMode { None, Supply, Demand }
+  int32 filter
+  int32 idleCourierCount
+  int32 workCourierCount
+  boolean courierAutoReplenish
+  int32 workCourierDataCount
+  CourierData workCourierDatas[workCourierCount] // allocated an array of length "workCourierDataCount", but only contains "workCourierCount" elements
+  DeliveryLogisticOrder orders[workCourierCount]
+  int32 holdupItemCount
+  int32 holdupPackageLength
+  DispenserStore holdupPackage[holdupItemCount]
+  int32 playerOrdered
+  int32 storageOrdered
+  int32 pairProcess
+  int32 pulseSignal // clip to [0, 3]
+}
+
+CourierData {
+  int32 version = 0
+  float32 beginX
+  float32 beginY
+  float32 beginZ
+  float32 endX
+  float32 endY
+  float32 endZ
+  int32 endId
+  float32 direction
+  float32 maxt
+  float32 t
+  int32 itemId
+  int32 itemCount
+  int32 inc
+  int32 gene
+}
+
+DeliveryLogisticOrder {
+  int32 version = 0
+  int32 itemId
+  int32 otherId
+  int32 thisOrdered
+  int32 otherOrdered
+}
+
+DispenserStore {
+  int32 version = 0
+  int32 itemId
+  int32 count
+  int32 inc
 }
 
 // inlined
@@ -1553,7 +1653,7 @@ StationComponentExportStruct {
 }
 
 StationComponent {
-  int32 version = 4
+  int32 version = 5
   int32 id
   int32 gid
   int32 entityId
@@ -1615,6 +1715,8 @@ StationComponent {
   int32 deliveryDrone  // version >= 2
   int32 deliveryShips  // version >= 2
   int32 pilerCount  // version >= 4
+  boolean droneAutoReplenish // version >= 5
+  boolean shipAutoReplenish // version >= 5
 }
 
 // inlined
