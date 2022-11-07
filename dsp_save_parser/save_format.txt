@@ -3,7 +3,7 @@
 // majorGameVersion: 0
 // minorGameVersion: 9
 // releaseGameVersion: 27
-// buildGameVersion: 14659
+// buildGameVersion: 15033
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -123,7 +123,7 @@ AchievementRuntimeData_Fractinator {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 8
+  int32 version = 9
   float64 cameraUPosX
   float64 cameraUPosY
   float64 cameraUPosZ
@@ -159,6 +159,7 @@ GamePrefsData {
   boolean dismantleFilterInserter // version >= 4
   boolean dysonSphereHideFarSideInEditor // version >= 6
   boolean dysonSphereHideRocketBodies // version >= 8
+  boolean techTreeShowProperty // version >= 9
 }
 
 KeyValuePairInt32Int32 {
@@ -643,7 +644,8 @@ TrashObject {
 }
 
 TrashData {
-  int32 version = 0
+  int32 version = 1
+  int32 warningId // version >= 1
   int32 landPlanetId
   int32 nearPlanetId
   int32 nearStarId
@@ -947,7 +949,7 @@ BeltComponent {
 }
 
 SplitterComponent {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 entityId
   int32 beltA
@@ -967,6 +969,10 @@ SplitterComponent {
   int32 outFilter
   uint8 prioritySlotPresets  // version >= 1
   int16 outFilterPreset  // version >= 1
+  uint8 prioritySlotPresets  // version >= 2
+  int16 outFilterPreset  // version >= 2
+  int32 topId  // version >= 2
+  int32 bottomId  // version >= 2
 }
 
 // inlined
@@ -1874,7 +1880,7 @@ DysonSphereExportStruct {
 }
 
 DysonSphere {
-  int32 version == 3
+  int32 version = 3
   int32 randSeed
   DysonSwarm swarm
   int32 reserved = 1212  // constant
