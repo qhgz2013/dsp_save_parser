@@ -2,9 +2,11 @@
 
 A python based save data parser for Dyson Sphere Program.
 
-Current version: `0.9.27.15033` (Updated on 2 November, 2022)
+Current version: `0.9.27.15466` (Updated on 25 August, 2023)
 
 ## Usage
+
+### Parse DSV file (deserialization)
 
 Example:
 
@@ -60,6 +62,33 @@ with open('xxx.dsv', 'rb') as f:
             amount_dict[vein_data.type] += vein_data.amount
         amount_dict = {EVeinType(k).name: v for k, v in amount_dict.items()}
         print(factory.planet_id, factory.planet_theme, amount_dict)
+```
+
+### Export to DSV file (serialization)
+
+Write access is now supported. Here is an example:
+
+```python
+import dsp_save_parser as s
+
+with open('your_save_data.dsv', 'rb') as f:
+    data = s.GameSave.parse(f)
+
+# do some modifications, for example:
+data.account_data.user_name = 'my_name'  # change player's name
+data.game_data.main_player.sand_count = 99999999  # modify sands
+
+# save changes
+with open('your_modded_save_data.dsv', 'wb') as f:
+    data.save(f)
+```
+
+Type casting for basic data types (uints, ints, floats, strings and their arrays) is automatically executed during calling `save` method.
+
+If you changed the element counts in an array, don't forget to change its length attribute of the array:
+```python
+data.game_data.game_desc.saved_theme_ids.pop()  # remove element
+data.game_data.game_desc.num_saved_theme_ids -= 1  # also decrease the array length manually
 ```
 
 ## Save data file structure

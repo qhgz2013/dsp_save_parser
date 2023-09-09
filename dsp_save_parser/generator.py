@@ -64,6 +64,7 @@ PROPS_BODY = re.compile(r'props\s*\(\s*([^)]+)\s*\)')
 BUILTIN_TYPES = {'int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64', 'float32', 'float64',
                  'string', 'boolean', 'FlexibleInt'}
 FLOAT_COMPARISON_EPS = 1e-6
+KEYWORDS_IN_IF_CLAUSE = {'None', 'not', 'and', 'or', 'is'}
 
 
 # convert camel variable like varName to var_name
@@ -309,7 +310,7 @@ def parse_variable_def(def_file: TextIO, var_meta: Dict[str, Any], line_no: int)
 
 
 def parse_attribute_def(def_file: TextIO, class_attrs: Dict[str, Any], line_no: int):
-    var_meta = {}
+    var_meta = {}  # type: Dict[str, Any]
 
     # 1.0.2: injected keyword
     rollback_position = def_file.tell()
@@ -443,6 +444,7 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
         if meta['is_array']:
             py_type = 'List[%s]' % py_type
         # convert List[uint8] to bytes to improve performance
+        # TODO: use ctypes for built-in arrays
         if py_type == 'List[uint8]':
             py_type = 'bytes'
         comment = meta['comment']
@@ -469,6 +471,9 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
         meta['generated_type'] = py_type
         meta['generated_name'] = name
 
+    # add "location_start" and "location_end"
+    slot_items.extend(['location_start', 'location_end'])
+
     # generate __slots__
     out_py_file.write('\n')
     pretty_write(out_py_file, ["'%s'" % x for x in slot_items], leading_str='    __slots__ = [', trailing_str=']')
@@ -481,12 +486,14 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
     init_params.append('location_start: int = -1')
     init_params.append('location_end: int = -1')
     pretty_write(out_py_file, init_params, leading_str='    def __init__(self, ', leading_spaces=17, trailing_str='):')
+    # out_py_file.write('        SaveObject._skip_setattr_check = True\n')
     for meta in class_attrs.values():
         if meta['type'] == 'comment':
             continue
         out_py_file.write('        self.%s = %s\n' % (meta['generated_name'], meta['generated_name']))
     out_py_file.write('        self.location_start = location_start\n')
     out_py_file.write('        self.location_end = location_end\n')
+    # out_py_file.write('        SaveObject._skip_setattr_check = False\n')
 
     # generate parse method
     out_py_file.write('\n')
@@ -547,9 +554,43 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
                                                                      repr(meta['assertion']['value'])))
 
     out_py_file.write('        location_end = stream.tell()\n')
-    # add "location_start" and "location_end"
-    slot_items.extend(['location_start', 'location_end'])
     pretty_write(out_py_file, slot_items, leading_str='        return cls(', trailing_str=')')
+
+    # generate save method
+    out_py_file.write('\n')
+    out_py_file.write('    def save(self, stream: BinaryIO):\n')
+    # out_py_file.write('        assert stream.tell() == self.location_start\n')
+    for meta in class_attrs.values():
+        if meta['type'] == 'comment':
+            continue
+        if meta['injected']:
+            continue
+        if meta['is_array']:
+            if meta['generated_type'] == 'bytes':
+                save_stmt = ['stream.write(self.%s)' % meta['generated_name']]
+            else:
+                save_stmt = ['for t_%s in self.%s:' % (meta['generated_name'], meta['generated_name'])]
+                if meta['type'] in BUILTIN_TYPES:
+                    save_stmt.append('    %s(t_%s).save(stream)' % (meta['type'], meta['generated_name']))
+                else:
+                    save_stmt.append('    t_%s.save(stream)' % meta['generated_name'])
+        else:
+            if meta['type'] in BUILTIN_TYPES:
+                save_stmt = ['%s(self.%s).save(stream)' % (meta['type'], meta['generated_name'])]
+            else:
+                save_stmt = ['self.%s.save(stream)' % meta['generated_name']]
+        if meta['if_clause']:
+            save_stmt = ['    %s' % x for x in save_stmt]
+            if_clause_token = camel_to_underline(meta['if_clause']).split(' ')
+            for i, token in enumerate(if_clause_token):
+                if token in KEYWORDS_IN_IF_CLAUSE:  # skip keywords
+                    continue
+                if TOKEN.match(token):
+                    if_clause_token[i] = 'self.%s' % token
+            save_stmt.insert(0, 'if %s:' % ' '.join(if_clause_token))
+        for stmt in save_stmt:
+            out_py_file.write('        %s\n' % stmt)
+    # out_py_file.write('        assert stream.tell() == self.location_end\n')
 
     if tmp_content != '':
         out_py_file.write('\n')

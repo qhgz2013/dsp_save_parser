@@ -17,6 +17,12 @@ def main():
         # do sth with the save data here, for example, exporting the vein amounts for each planet:
         # for factory in data.game_data.factories:
         #     print(factory.planet_id, factory.planet_theme, factory.planet.vein_amounts)
+        # or modifying save data:
+        # data.account_data.user_name = 'my_name'
+        # data.game_data.main_player.sand_count = 99999999  # modifying sands
+        # once finished, export to dsv file via:
+        # with open(args.save_path + '_modded.dsv', 'wb') as f:
+        #     data.save(f)
 
 
 if __name__ == '__main__':

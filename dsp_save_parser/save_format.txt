@@ -3,7 +3,7 @@
 // majorGameVersion: 0
 // minorGameVersion: 9
 // releaseGameVersion: 27
-// buildGameVersion: 15033
+// buildGameVersion: 15466
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
