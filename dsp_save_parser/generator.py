@@ -7,15 +7,17 @@
 # DOCUMENT ::= ([NEW_LINE] CLASS_DEF)*
 # NEW_LINE ::= [SPACE] [COMMENT] "\n" [NEW_LINE]
 # SPACE ::= [ \t]+
-# CLASS_DEF ::= TOKEN [SPACE] [NEWLINE] "{" NEWLINE CLASS_BODY "}" [NEWLINE]
+# CLASS_DEF ::= TOKEN [SPACE] [TEMPLATE_DEF] [SPACE] [NEWLINE] "{" NEWLINE CLASS_BODY "}" [NEWLINE]
 # TOKEN ::= [A-Za-z_] [A-Za-z0-9_]*
+# TEMPLATE_DEF ::= "<" [SPACE] TEMPLATE_TYPE_NAME_LIST [SPACE] ">"
+# TEMPLATE_TYPE_NAME_LIST = TOKEN [[SPACE] "," [SPACE] TOKEN]*
 # CLASS_BODY ::= [ATTRIBUTE_DEF [NEWLINE ATTRIBUTE_DEF]*]
 # ATTRIBUTE_DEF ::= (INJECTED_VARIABLE_DEF | VARIABLE_DEF) [SPACE] [INLINE_COMMENT]
 # INJECTED_VARIABLE_DEF ::= "injected" SPACE VARIABLE_DEF
 # VARIABLE_DEF ::= VARIABLE_TYPE SPACE TOKEN [SPACE] [ARRAY_DEF] [SPACE] [IF_CLAUSE] [SPACE] [PROPS_CLAUSE] [SPACE]
 #                  [DEFAULT_CLAUSE] [SPACE] [ASSERTION]
 # INLINE_COMMENT ::= COMMENT
-# VARIABLE_TYPE ::= TOKEN
+# VARIABLE_TYPE ::= TOKEN [TEMPLATE_DEF]
 # ARRAY_DEF ::= "[" [SPACE] ARRAY_SIZE [SPACE] "]"
 # ARRAY_SIZE ::= [^\]]+
 # IF_CLAUSE ::= "if" [SPACE] "(" [SPACE] CONDITION [SPACE] ")"
@@ -51,6 +53,7 @@ import hashlib
 import os
 from datetime import datetime
 from io import StringIO
+from copy import deepcopy
 
 
 SPACES = re.compile(r'[ \t]*')
@@ -67,15 +70,20 @@ FLOAT_COMPARISON_EPS = 1e-6
 KEYWORDS_IN_IF_CLAUSE = {'None', 'not', 'and', 'or', 'is'}
 
 
-# convert camel variable like varName to var_name
+# convert camel variable like varName to var_name, VARName to var_name ...
 def camel_to_underline(name: str):
-    ret = re.sub(r'([A-Z])', r'_\1', name).lower()
+    ret = re.sub(r'([A-Z]+)(?=[A-Z])', r'_\1', name)
+    ret = re.sub(r'([A-Z]*)([A-Z])(?=[a-z0-9_])', r'\1_\2', ret).lower()
     # remove leading "_"
     if ret.startswith('_'):
         ret = ret[1:]
     # replace the stub "!= null" and "== null" to python "is not None" and "is None"
     ret = re.sub(r'==\s*null', r' is None', ret)
     ret = re.sub(r'!=\s*null', r' is not None', ret)
+    # boolean operators "!" "&&" "||"
+    ret = re.sub(r'!(?!=)', r'not ', ret)
+    ret = re.sub(r'&&', r' and ', ret)
+    ret = re.sub(r'\|\|', r' or ', ret)
     # remove unnecessary spaces
     ret = re.sub(r'\s+', ' ', ret)
     return ret
@@ -261,6 +269,12 @@ def parse_variable_def(def_file: TextIO, var_meta: Dict[str, Any], line_no: int)
     var_type = match.group()
     line = line[match.end():]
     rollback_position += match.end()
+    template_data = {}
+    def_file.seek(rollback_position)
+    line_no = parse_template_def(def_file, template_data, line_no)
+    var_meta['template_type_list'] = template_data['generic_type_def']
+    rollback_position = def_file.tell()
+    line = def_file.readline().rstrip()
     spaces = SPACES.match(line)
     assert spaces.end() > 0, 'line %d: %s' % (line_no, line)
     line = line[spaces.end():]
@@ -399,35 +413,101 @@ def pretty_write(out_py_file: TextIO, array: List[str], leading_str: str = '', l
         out_py_file.write('\n')
 
 
-def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
+def parse_template_type_name_list(def_file: TextIO, type_name_defs: List[str], line_no: int):
     rollback_position = def_file.tell()
-    line = def_file.readline()
-    match = TOKEN.match(line)
-    assert match, 'line %d: %s' % (line_no, line)
-    class_name = match.group()
+    line = def_file.readline().rstrip('\n')
+    spaces = SPACES.match(line)
+    rollback_position += spaces.end()
+    line = line[spaces.end():]
+    token = TOKEN.match(line)
+    name = token.group()
+    type_name_defs.append(name)
+    rollback_position += len(name)
+    line = line[len(name):]
+    spaces = SPACES.match(line)
+    rollback_position += spaces.end()
+    line = line[spaces.end():]
+    while line.startswith(','):
+        line = line[1:]
+        rollback_position += 1
+        spaces = SPACES.match(line)
+        rollback_position += spaces.end()
+        line = line[spaces.end():]
+        token = TOKEN.match(line)
+        name = token.group()
+        type_name_defs.append(name)
+        rollback_position += len(name)
+    def_file.seek(rollback_position)
+    return line_no
+
+    
+def parse_template_def(def_file: TextIO, template_data: Dict[str, Any], line_no: int):
+    rollback_position = def_file.tell()
+    type_name_defs = []
+    is_template_cls = False
+    if def_file.read(1) == '<':
+        parse_template_type_name_list(def_file, type_name_defs, line_no)
+        rollback_position = def_file.tell()
+        line = def_file.readline().rstrip('\n')
+        spaces = SPACES.match(line)
+        rollback_position += spaces.end()
+        line = line[spaces.end():]
+        assert line[0] == '>', 'line %d: %s' % (line_no, line)
+        rollback_position += 1
+        is_template_cls = True
+    def_file.seek(rollback_position)
+    template_data['generic_type_def'] = type_name_defs
+    template_data['is_template_cls'] = is_template_cls
+    return line_no
+
+
+def write_template_py_class(class_def: dict, template_type_list: list, out_py_file: TextIO, line_no: int):
+    template_class_name = '%s_%s' % (class_def['class_name'], ''.join(template_type_list))
+    template_data = class_def['template_data']
+    assert template_data['is_template_cls'], '%s is not a template class' % class_def['class_name']
+    assert len(template_data['generic_type_def']) == len(template_type_list), '%s: nonequal template type list' % class_def['class_name']
+    if template_class_name in _generated_template_classes:
+        return
+    new_class_def = deepcopy(class_def)
+    new_class_def['class_name'] = template_class_name
+    new_class_def['template_data']['is_template_cls'] = False
+    new_class_def['template_data']['generic_type_def'] = []
+    # replacing template types
+    class_attrs = new_class_def['class_attrs']
+    template_type_mappings = {t_origin: t_real for t_origin, t_real in zip(template_data['generic_type_def'], template_type_list)}
+    template_class_gen_list = []
+    for _, meta in class_attrs.items():
+        if meta['type'] in template_type_mappings:
+            meta['type'] = template_type_mappings[meta['type']]
+        for i, type_name in enumerate(meta['template_type_list']):
+            if type_name in template_type_mappings:
+                meta['template_type_list'][i] = template_type_mappings[type_name]
+        if len(meta['template_type_list']) > 0:
+            template_class_gen_list.append((meta['type'], meta['template_type_list']))
+    write_py_class(new_class_def, out_py_file, line_no)
+    _generated_template_classes.add(template_class_name)
+
+    # recursively generate template classes
+    for type_name, template_type_list in template_class_gen_list:
+        write_template_py_class(_global_class_defs[type_name], template_type_list, out_py_file, line_no)
+
+
+def write_py_class(class_def: dict, out_py_file: TextIO, line_no: int):
+    template_data = class_def['template_data']
+    if template_data['is_template_cls']:
+        # do not generate template class
+        return
+    class_name = class_def['class_name']
     out_py_file.write('\n\n# (L%d): %s\n' % (line_no, class_name))
     out_py_file.write('# noinspection DuplicatedCode,PyShadowingBuiltins,PyPep8Naming\n')
     out_py_file.write('class %s(SaveObject):\n' % class_name)
-    rollback_position += len(class_name)
-    def_file.seek(rollback_position)
-    tmp_comments = StringIO()
-    line_no = parse_new_line(def_file, tmp_comments, line_no)
-    assert def_file.read(1) == '{', 'line %d: %s' % (line_no, line)
-    line_no = parse_new_line(def_file, tmp_comments, line_no)
+    tmp_comments = class_def['tmp_comments']
     for line in tmp_comments.getvalue().split('\n'):
         if line.strip() == '':
             continue
         out_py_file.write('    %s\n' % line)
-    class_attrs = {}  # type: Dict[str, Dict[str, Any]]
-    line_no = parse_class_body(def_file, class_attrs, line_no)
-    assert def_file.read(1) == '}', 'line %d: %s' % (line_no, line)
-    try:
-        tmp_content = StringIO()
-        line_no = parse_new_line(def_file, tmp_content, line_no)
-        tmp_content = tmp_content.getvalue()
-    except EOFError:
-        tmp_content = ''
-
+    class_attrs = class_def['class_attrs']
+    template_class_gen_list = []
     # export fields
     slot_items = []
     for name, meta in class_attrs.items():
@@ -437,6 +517,10 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
                     out_py_file.write('    %s\n' % line)
             continue
         name = camel_to_underline(name)
+        if len(meta['template_type_list']) > 0:
+            template_class_gen_list.append((meta['type'], meta['template_type_list']))
+            # converts template class name
+            meta['type'] = '%s_%s' % (meta['type'], ''.join(meta['template_type_list']))
         if meta['type'] in BUILTIN_TYPES:
             py_type = meta['type']
         else:
@@ -560,6 +644,7 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
     out_py_file.write('\n')
     out_py_file.write('    def save(self, stream: BinaryIO):\n')
     # out_py_file.write('        assert stream.tell() == self.location_start\n')
+    gen_pass_stub = True
     for meta in class_attrs.values():
         if meta['type'] == 'comment':
             continue
@@ -590,11 +675,45 @@ def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
             save_stmt.insert(0, 'if %s:' % ' '.join(if_clause_token))
         for stmt in save_stmt:
             out_py_file.write('        %s\n' % stmt)
+        gen_pass_stub = False
+    if gen_pass_stub:
+        out_py_file.write('        pass\n')
     # out_py_file.write('        assert stream.tell() == self.location_end\n')
-
-    if tmp_content != '':
+    ending_comment = class_def['ending_comment'].getvalue()
+    if len(ending_comment) > 0:
         out_py_file.write('\n')
-        out_py_file.write(tmp_content)
+        out_py_file.write(ending_comment)
+
+    # recursively generate template classes
+    for type_name, template_type_list in template_class_gen_list:
+        write_template_py_class(_global_class_defs[type_name], template_type_list, out_py_file, line_no)
+
+
+_global_class_defs = {}
+_generated_template_classes = set()
+
+def parse_class_def(def_file: TextIO, out_py_file: TextIO, line_no: int):
+    rollback_position = def_file.tell()
+    line = def_file.readline()
+    match = TOKEN.match(line)
+    assert match, 'line %d: %s' % (line_no, line)
+    class_name = match.group()
+    rollback_position += len(class_name)
+    class_def = {'class_name': class_name, 'template_data': {}, 'tmp_comments': StringIO(), 'class_attrs': {}, 'ending_comment': StringIO()}
+    _global_class_defs[class_name] = class_def
+    def_file.seek(rollback_position)
+    line_no = parse_template_def(def_file, class_def['template_data'], line_no)
+    rollback_position = def_file.tell()
+    line_no = parse_new_line(def_file, class_def['tmp_comments'], line_no)
+    assert def_file.read(1) == '{', 'line %d: %s' % (line_no, line)
+    line_no = parse_new_line(def_file, class_def['tmp_comments'], line_no)
+    line_no = parse_class_body(def_file, class_def['class_attrs'], line_no)
+    assert def_file.read(1) == '}', 'line %d: %s' % (line_no, line)
+    try:
+        line_no = parse_new_line(def_file, class_def['ending_comment'], line_no)
+    except EOFError:
+        pass
+    write_py_class(class_def, out_py_file, line_no)
     return line_no
 
 

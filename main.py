@@ -15,8 +15,17 @@ def main():
         data = s.GameSave.parse(f)
         print(data)
         # do sth with the save data here, for example, exporting the vein amounts for each planet:
+        #
+        # from collections import defaultdict
         # for factory in data.game_data.factories:
-        #     print(factory.planet_id, factory.planet_theme, factory.planet.vein_amounts)
+        #     amount_dict = defaultdict(int)
+        #     # from 0.9.27: "factory.planet.vein_amounts" is not used and keeps zero
+        #     for vein_data in factory.vein_pool:
+        #         if vein_data.id == 0:
+        #             continue
+        #         amount_dict[vein_data.type] += vein_data.amount
+        #     print(factory.planet_id, factory.planet_theme, amount_dict)
+        #
         # or modifying save data:
         # data.account_data.user_name = 'my_name'
         # data.game_data.main_player.sand_count = 99999999  # modifying sands

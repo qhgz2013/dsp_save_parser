@@ -9,6 +9,7 @@ __all__ = ['ParserBase', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', '
 _BYTE_ORDER = 'little'  # type: Literal['little', 'big']
 _IO_TYPE = BinaryIO
 _BUILTIN_TYPES = set(__all__) | {'NoneType', 'int', 'float', 'str', 'bool'}
+_REPR_SKIP_ENTRIES = {'location_start', 'location_end'}
 
 assert _BYTE_ORDER in {'little', 'big'}
 
@@ -24,9 +25,13 @@ class ParserBase:
     def _repr_internal_get_field_repr(self):
         data = []
         for name in self.__slots__:
+            if name in _REPR_SKIP_ENTRIES:
+                continue
             value = getattr(self, name)
             if value.__class__.__name__ in _BUILTIN_TYPES:
                 data.append(f'{name}={value!r}')
+            elif isinstance(value, list) and len(value) == 0:
+                data.append(f'{name}=[]')  # special cast for empty list
             else:
                 data.append(f'{name}=<{value.__class__.__name__}>')
         return ", ".join(data)
