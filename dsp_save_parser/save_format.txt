@@ -3149,7 +3149,7 @@ DFSCoreComponent {
   int32 buildTinderCount if (id > 0)
   int32 buildTinderTriggerMinTick if (id > 0)
   int32 buildTinderTriggerKeyTick if (id > 0)
-  float32 buildTinderTriggerProbability
+  float32 buildTinderTriggerProbability if (id > 0)
 }
 
 DFSNodeComponent {
