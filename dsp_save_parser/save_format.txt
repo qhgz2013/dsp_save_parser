@@ -539,17 +539,11 @@ Mecha {
   MechaForge forge
   MechaLab lab
   ConstructionModuleComponent constructionModule // version >= 7
-  float32 autoReconstructLastSearchPosX // version >= 10
-  float32 autoReconstructLastSearchPosY // version >= 10
-  float32 autoReconstructLastSearchPosZ // version >= 10
+  Vector3 autoReconstructLastSearchPos // version >= 10
   int32 autoReconstructLastSearchAstroId // version >= 10
-  float32 buildLastSearchPosX // version >= 10
-  float32 buildLastSearchPosY // version >= 10
-  float32 buildLastSearchPosZ // version >= 10
+  Vector3 buildLastSearchPos // version >= 10
   int32 buildLastSearchAstroId // version >= 10
-  float32 repairLastSearchPosX // version >= 10
-  float32 repairLastSearchPosY // version >= 10
-  float32 repairLastSearchPosZ // version >= 10
+  Vector3 repairLastSearchPos // version >= 10
   int32 repairLastSearchAstroId // version >= 10
   int32 hpMax // version >= 7
   int32 hpMaxUpgrade // version >= 8
@@ -1511,7 +1505,7 @@ PowerSystem {
   int32 netCapacity
   int32 netCursor
   int32 netRecycleCursor
-  PowerNetExportStruct netPool[netCursor]
+  ExportStruct<int32, PowerNetwork> netPool[netCursor]
   int32 netRecycle[netRecycleCursor]
 }
 
@@ -1551,12 +1545,6 @@ PowerGeneratorComponent {
   float32 y
   float32 z
   boolean boost // version >= 4
-}
-
-// inline
-PowerNetExportStruct {
-  int32 available
-  PowerNetwork net if (available != 0)
 }
 
 PowerNodeComponent {
