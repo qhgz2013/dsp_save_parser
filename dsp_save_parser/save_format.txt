@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 10
-// releaseGameVersion: 29
-// buildGameVersion: 22015
+// releaseGameVersion: 30
+// buildGameVersion: 22292
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -213,7 +213,7 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 12
+  int32 version = 13
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
@@ -254,6 +254,8 @@ GamePrefsData {
   boolean techTreeShowProperty // version >= 9
   int32 turretBurstMode // version >= 10
   int32 fastBuildBatchSize // version >= 12
+  boolean sandboxIsDirectlyObtain // version >= 13
+  boolean sandboxDirectlyObtainIsStack // version >= 13
 }
 
 // used in GamePrefsData
@@ -893,7 +895,19 @@ PlayerNavigation {
 }
 
 GalacticTransport {
+  int32 version = 1
+  int32 numStation2stationRoutes
+  int64 station2stationRoutes[numStation2stationRoutes]
+  int32 numAstro2astroRoutes
+  KeyValuePair<int64, LogisticShipRoute> astro2astroRoutes[numAstro2astroRoutes]
+  int32 numAstro2astroBans
+  int64 astro2astroBans[numAstro2astroBans]
+}
+
+LogisticShipRoute {
   int32 version = 0
+  boolean enable
+  string comment
 }
 
 TrashSystem {
@@ -1045,12 +1059,13 @@ VeinGroup {
 }
 
 EntityData {
-  uint8 version = 9
+  uint8 version = 10
   int32 id
   int16 protoId if (id > 0)
   int16 modelIndex if (id > 0)
   Vector3 pos if (id > 0)
   Quaternion rot if (id > 0)
+  float32 tilt if (id > 0) // version >= 10
   boolean localized if (id > 0) // version >= 8
   uint32 hashBits if (id > 0) // version >= 7
   int32 hashAddress if (id > 0) // version >= 7
@@ -1130,7 +1145,7 @@ PrebuildExportStruct {
 }
 
 PrebuildData {
-  uint8 version = 5
+  uint8 version = 6
   int32 id
   int16 protoId if (id != 0)
   int16 modelIndex if (id != 0)
@@ -1138,6 +1153,7 @@ PrebuildData {
   Quaternion rot if (id != 0)
   Vector3 pos2 if (id != 0)
   Quaternion rot2 if (id != 0)
+  float32 tilt if (id != 0) // version >= 6
   uint32 hashBits if (id != 0) // version >= 4
   int32 hashAddress if (id != 0) // version >= 4
   boolean isDestroyed if (id != 0) // version >= 3
@@ -1740,13 +1756,8 @@ InserterComponent {
   int16 filter  // int32 for version 0
   int16 itemId  // int32 for version 0
   uint8 stackCount  // int32 for version 0
-  float32 pos2X
-  float32 pos2Y
-  float32 pos2Z
-  float32 rot2X
-  float32 rot2Y
-  float32 rot2Z
-  float32 rot2W
+  Vector3 pos2
+  Quaternion rot2
   uint8 t1  // int16 for version 0
   uint8 t2  // int16 for version 0
   int16 itemCount  // version >= 2
@@ -1991,7 +2002,7 @@ DispenserStore {
 }
 
 StationComponent {
-  int32 version = 6
+  int32 version = 7
   int32 id
   int32 gid
   int32 entityId
@@ -2022,10 +2033,13 @@ StationComponent {
   RemoteLogisticOrder workShipOrders[workShipCount]
   int32 numStorage
   StationStore storage[numStorage]
+  int32 numPriorityLocks // version >= 7
+  StationPriorityLock priorityLocks[numPriorityLocks] // version >= 7
   int32 numSlots  // version >= 1
   SlotData slots[numSlots]  // version >= 1
   int32 localPairProcess
-  int32 remotePairProcess
+  int32 numRemotePairProcess // version >= 7
+  int32 remotePairProcess[numRemotePairProcess] // version >= 7
   int32 nextShipIndex
   boolean isCollector
   boolean isVeinCollector  // version >= 3
@@ -2046,6 +2060,14 @@ StationComponent {
   int32 pilerCount  // version >= 4
   boolean droneAutoReplenish // version >= 5
   boolean shipAutoReplenish // version >= 5
+  int64 remoteGroupMask // version >= 7
+  int32 routePriority // version >= 7 ERemoteRoutePriority { Ignore = 1, Prioritize = 2, Only = 3 }
+}
+
+StationPriorityLock {
+  int32 version = 0
+  uint8 priorityIndex
+  uint8 lockTick
 }
 
 // inlined
@@ -2117,13 +2139,14 @@ RemoteLogisticOrder {
 }
 
 StationStore {
-  int32 version = 1
+  int32 version = 2
   int32 itemId
   int32 count
   int32 inc
   int32 localOrder
   int32 remoteOrder
-  int32 max
+  int32 maxWithKeepMode // version >= 2, keepMode = value / 1e8, max = value % 1e8
+  float32 keepIncRatio
   int32 localLogic  // ELogisticStorage { None, Supply, Demand }
   int32 remoteLogic
 }
@@ -2185,7 +2208,7 @@ ExtraInfoComponent {
   uint8 objectType // EObjectType
   int32 objectId
   int32 infoLen
-  uint8 info[infoLen] // string
+  string info if (infoLen > 0)
 }
 
 DysonSphere {
