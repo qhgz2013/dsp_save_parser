@@ -3,7 +3,7 @@
 // majorGameVersion: 0
 // minorGameVersion: 10
 // releaseGameVersion: 30
-// buildGameVersion: 22292
+// buildGameVersion: 23430
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -213,7 +213,7 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 13
+  int32 version = 14
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
@@ -256,6 +256,14 @@ GamePrefsData {
   int32 fastBuildBatchSize // version >= 12
   boolean sandboxIsDirectlyObtain // version >= 13
   boolean sandboxDirectlyObtainIsStack // version >= 13
+  ControlPanelFilter uiControlPanelFilter // version >= 14, in SaveUIControlPanelWindowPrefs
+  int32 numUiControlPanelAstroExpands // version >= 14
+  int32 uiControlPanelAstroExpands[numUiControlPanelAstroExpands] // version >= 14
+  int64 uiControlPanelInterstellarPairing // version >= 14
+  int64 uiControlPanelIntraplanetaryPairing // version >= 14
+  int32 uiControlPanelIntraplanetaryPairingPlanetId // version >= 14
+  int64 uiControlPanelDispenserPairing // version >= 14
+  int32 uiControlPanelDispenserPairingPlanetId // version >= 14
 }
 
 // used in GamePrefsData
@@ -264,8 +272,19 @@ AstroName {
   string name
 }
 
+ControlPanelFilter {
+  int32 version = 0
+  int32 typeFilter // EEntryFilter {None = 0, InterstellarStation = 2, OrbitCollector = 4, InterstellarStationAndCollector = 6, LocalStation = 8, IntraplanetaryStation = 10, VeinCollector = 16, IntraplanetStationAndCollector = 26, AnyStation = 30, Dispenser = 32}
+  int32 astroFilter
+  int32 numItemsFilter
+  int32 itemsFilter[numItemsFilter]
+  int32 stateFilter
+  string searchFilter
+  int32 sortFilter // ESortMethod { Default, AstroDistance }
+}
+
 GameHistoryData {
-  int32 version = 14
+  int32 version = 15
   int32 numRecipeUnlocked
   int32 recipeUnlocked[numRecipeUnlocked]
   int32 numEnemyDropItemUnlocked // version >= 11
@@ -292,6 +311,7 @@ GameHistoryData {
   int32 inserterStackInput // version >= 14
   int32 inserterStackOutput // version >= 14
   boolean inserterBidirectional // version >= 14
+  boolean beltVerticalConstruction // version >= 15
   float32 constructionDroneSpeed // version >= 11
   int32 constructionDroneMovement // version >= 11
   int32 autoReconstructSpeed // version >= 11
@@ -1173,7 +1193,7 @@ PrebuildData {
 }
 
 CraftData {
-  uint8 version = 1
+  uint8 version = 2
   int32 id
   int16 protoId if (id > 0)
   int16 modelIndex if (id > 0)
@@ -1194,6 +1214,28 @@ CraftData {
   int32 droneId if (id > 0)
   int32 fleetId if (id > 0)
   FlexibleInt unitId if (id > 0)
+  FlexibleInt cAnchorId if (id > 0) // version >= 2
+  FlexibleInt vehicleId if (id > 0) // version >= 2
+  FlexibleInt vPartId if (id > 0) // version >= 2
+  FlexibleInt vdCockpitId if (id > 0) // version >= 2
+  FlexibleInt vdGyroscopeId if (id > 0) // version >= 2
+  FlexibleInt vdTyreId if (id > 0) // version >= 2
+  FlexibleInt vdSuspensionId if (id > 0) // version >= 2
+  FlexibleInt vdEngineId if (id > 0) // version >= 2
+  FlexibleInt vdWarpId if (id > 0) // version >= 2
+  FlexibleInt vdBatteryId if (id > 0) // version >= 2
+  FlexibleInt vdStorageId if (id > 0) // version >= 2
+  FlexibleInt vdFuelStorageId if (id > 0) // version >= 2
+  FlexibleInt vdTankId if (id > 0) // version >= 2
+  FlexibleInt vdConnectorId if (id > 0) // version >= 2
+  FlexibleInt vwGaussId if (id > 0) // version >= 2
+  FlexibleInt vwLaserId if (id > 0) // version >= 2
+  FlexibleInt vwCannonId if (id > 0) // version >= 2
+  FlexibleInt vwMissileId if (id > 0) // version >= 2
+  FlexibleInt vwPlasmaId if (id > 0) // version >= 2
+  FlexibleInt vwDisturbId if (id > 0) // version >= 2
+  FlexibleInt vwThrowId if (id > 0) // version >= 2
+  FlexibleInt vwShieldId if (id > 0) // version >= 2
 }
 
 EnemyData {
