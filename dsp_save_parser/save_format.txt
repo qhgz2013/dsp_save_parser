@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 10
-// releaseGameVersion: 30
-// buildGameVersion: 23430
+// releaseGameVersion: 31
+// buildGameVersion: 24710
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -113,8 +113,8 @@ AccountData {
 }
 
 GameData {
-  int32 version = 10
-  int32 patch = 17 // version >= 4
+  int32 version = 11
+  int32 patch = 19 // version >= 4
   AccountData accountData // repeated, version >= 3
   string gameName
   GameDesc gameDesc
@@ -138,7 +138,28 @@ GameData {
   int32 zero2 = 0
   GameAbnormalityData gameAbnormality // GameAbnormalityData_0925
   MilestoneSystem milestoneSystem // version >= 7
+  GoalSystem goalSystem // version >= 11
   WarningSystem warningSystem // version >= 9
+}
+
+GoalSystem {
+  int32 version = 0
+  int32 numGoalDatas
+  KeyValuePair<int32, GoalData> goalDatas[numGoalDatas]
+  int32 queueCursor
+  int32 goalQueue[queueCursor]
+}
+
+GoalData {
+  int32 version = 0
+  int32 protoId
+  int64 currentValue
+  int64 targetValue
+  int32 stage // EGoalStage { Disabled, Enabled, Ignored, Completed }
+  boolean isManualIgnore
+  int32 numDisplayingState
+  boolean displayingState[numDisplayingState]
+  boolean isPatched
 }
 
 // used in GameData, inlined
@@ -148,7 +169,7 @@ DysonSphereData {
 }
 
 GameDesc {
-  int32 version = 8
+  int32 version = 9
   int64 creationTick // version >= 3
   int32 creationVersionMajor // version >= 6
   int32 creationVersionMinor // version >= 6
@@ -165,6 +186,7 @@ GameDesc {
   boolean isPeaceMode // version >= 7
   boolean isSandboxMode // version >= 7
   CombatSettings combatSettings // version >= 8
+  int32 goalLevel // version >= 9 EGoalLevel { None, Off, Key, Full }
 }
 
 CombatSettings {
@@ -213,7 +235,7 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 14
+  int32 version = 15
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
@@ -264,6 +286,7 @@ GamePrefsData {
   int32 uiControlPanelIntraplanetaryPairingPlanetId // version >= 14
   int64 uiControlPanelDispenserPairing // version >= 14
   int32 uiControlPanelDispenserPairingPlanetId // version >= 14
+  int32 uiGoalPanelState // version >= 15 EUIGoalPanelState { None, Closed, Collapse, Expand }
 }
 
 // used in GamePrefsData
@@ -284,7 +307,7 @@ ControlPanelFilter {
 }
 
 GameHistoryData {
-  int32 version = 15
+  int32 version = 17
   int32 numRecipeUnlocked
   int32 recipeUnlocked[numRecipeUnlocked]
   int32 numEnemyDropItemUnlocked // version >= 11
@@ -333,6 +356,7 @@ GameHistoryData {
   int32 labLevel
   int32 techSpeed
   float32 dysonNodeLatitude
+  int32 dysonNodeAbsorbInterval // version >= 16
   int64 universeMatrixPointUploaded
   boolean missionAccomplished
   int32 stationPilerLevel // version >= 7
@@ -375,6 +399,7 @@ TechState {
   int32 maxLevel
   int64 hashUploaded
   int64 hashNeeded
+  int64 unlockTick // added at GameHistoryData version 17
 }
 
 JournalSystem {
@@ -391,13 +416,12 @@ JournalData {
 }
 
 GameStatData {
-  int32 version = 1
+  int32 version = 2
   int32 numTechHashedHistory
   int32 techHashedHistory[numTechHashedHistory]
   ProductionStatistics statistics
   KillStatistics kill // version >= 1
-  int32 numFavoriteIds // version >= 1
-  int32 favoriteIds[numFavoriteIds] // version >= 1
+  TrafficStatistics traffic // version >= 2
 }
 
 ProductionStatistics {
@@ -417,6 +441,8 @@ KillStatistics {
   int32 numFactoryKillStatPool
   ExportStruct<uint8, FactoryKillStat> factoryKillStatPool[numFactoryKillStatPool]
   ExportStruct<uint8, MechaKillStat> mechaKillStat
+  int32 numFavoriteIds
+  int32 favoriteIds[numFavoriteIds]
 }
 
 AstroKillStat {
@@ -477,6 +503,34 @@ PowerStat {
   int32 cursor[numCursor]
   int32 numTotal // = 6
   int64 total[numTotal]
+}
+
+TrafficStatistics {
+  int32 version = 0
+  int32 numStarTrafficPool
+  ExportStruct<uint8, AstroTrafficStat> starTrafficPool[numStarTrafficPool]
+  int32 numFactoryTrafficPool
+  ExportStruct<uint8, AstroTrafficStat> factoryTrafficPool[numFactoryTrafficPool]
+}
+
+AstroTrafficStat {
+  int32 version = 0
+  int32 trafficCapacity
+  int32 trafficCursor
+  TrafficStat trafficPool[trafficCursor - 1]
+  int32 numItemIndices // fixed 12000
+  int32 itemIndices[numItemIndices]
+}
+
+TrafficStat {
+  int32 version = 0
+  int32 numCount // fixed 720
+  int32 count[numCount]
+  int32 numCursor // fixed 12
+  int32 cursor[numCursor]
+  int32 numTotal // fixed 14
+  int64 total[numTotal]
+  int32 itemId
 }
 
 Player {
@@ -1079,14 +1133,14 @@ VeinGroup {
 }
 
 EntityData {
-  uint8 version = 10
+  uint8 version = 11
   int32 id
   int16 protoId if (id > 0)
   int16 modelIndex if (id > 0)
   Vector3 pos if (id > 0)
   Quaternion rot if (id > 0)
   float32 tilt if (id > 0) // version >= 10
-  boolean localized if (id > 0) // version >= 8
+  uint8 stateFlags if (id > 0) // version >= 11
   uint32 hashBits if (id > 0) // version >= 7
   int32 hashAddress if (id > 0) // version >= 7
   int32 idSum if (id > 0) // sum of beltId, powerConId, ...
@@ -1193,7 +1247,7 @@ PrebuildData {
 }
 
 CraftData {
-  uint8 version = 2
+  uint8 version = 3
   int32 id
   int16 protoId if (id > 0)
   int16 modelIndex if (id > 0)
@@ -1236,6 +1290,8 @@ CraftData {
   FlexibleInt vwDisturbId if (id > 0) // version >= 2
   FlexibleInt vwThrowId if (id > 0) // version >= 2
   FlexibleInt vwShieldId if (id > 0) // version >= 2
+  FlexibleInt rigidId if (id > 0) // version >= 3
+  FlexibleInt ccrId if (id > 0) // version >= 3
 }
 
 EnemyData {
@@ -1456,7 +1512,7 @@ CargoPath {
 }
 
 SpraycoaterComponent {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 entityId
   int32 pcId
@@ -1468,6 +1524,7 @@ SpraycoaterComponent {
   FlexibleInt incCount
   FlexibleInt extraIncCount  // version >= 1
   FlexibleInt incCapacity
+  boolean incUsed // version >= 2
   FlexibleInt sprayTime
 }
 
@@ -1568,7 +1625,7 @@ PowerSystem {
 }
 
 PowerGeneratorComponent {
-  int32 version = 6
+  int32 version = 7
   int32 id
   int32 entityId
   uint8 subId  // version >= 1
@@ -1587,6 +1644,7 @@ PowerGeneratorComponent {
   int16 fuelCount
   int16 fuelInc  // version >= 2
   boolean productive  // version >= 2
+  boolean incUsed // version >= 7
   uint8 fuelIncLevel  // version >= 2
   int64 fuelHeat
   int32 catalystId
@@ -1614,21 +1672,18 @@ PowerNodeComponent {
   int32 workEnergyPerTick
   int32 idleEnergyPerTick
   int32 requiredEnergy
-  float32 powerPointX
-  float32 powerPointY
-  float32 powerPointZ
+  Vector3 powerPoint
   float32 connectDistance
   float32 coverRadius
 }
 
 PowerConsumerComponent {
-  int32 version = 0
+  int32 version = 1
   int32 id
   int32 entityId
   int32 networkId
-  float32 plugPosX
-  float32 plugPosY
-  float32 plugPosZ
+  Vector3 plugPos
+  float32 plugAlt // version >= 1
   int64 requiredEnergy
   int64 servedEnergy
   int64 workEnergyPerTick
@@ -1735,7 +1790,7 @@ FactorySystem {
   int32 fractionateCapacity
   int32 fractionateCursor
   int32 fractionateRecycleCursor
-  FractionateComponent fractionatePool[fractionateCursor - 1]
+  FractionatorComponent fractionatePool[fractionateCursor - 1]
   int32 fractionateRecycle[fractionateRecycleCursor]
   int32 ejectorCapacity
   int32 ejectorCursor
@@ -1807,7 +1862,7 @@ InserterComponent {
 }
 
 AssemblerComponent {
-  int32 version = 3
+  int32 version = 4
   int32 id
   int32 entityId
   int32 pcId
@@ -1821,6 +1876,7 @@ AssemblerComponent {
   int32 extraPowerRatio  // version >= 2
   boolean productive  // version >= 2
   boolean forceAccMode  // version >= 3
+  boolean incUsed // version >= 4
   int16 recipeId  // int32 for version 0
   uint8 recipeType if (recipeId > 0)
   int32 timeSpend if (recipeId > 0)
@@ -1843,8 +1899,8 @@ AssemblerComponent {
   int32 produced[numProduced] if (recipeId > 0)
 }
 
-FractionateComponent {
-  int32 version = 3
+FractionatorComponent {
+  int32 version = 4
   int32 id
   int32 entityId
   int32 pcId
@@ -1868,6 +1924,7 @@ FractionateComponent {
   int32 progress
   boolean reserved = 0  // always false
   boolean fractionateSuccess
+  boolean incUsed // version >= 4
   int32 fluidInputMax
   int32 productOutputMax
   int32 fluidOutputMax
@@ -1877,7 +1934,7 @@ FractionateComponent {
 }
 
 EjectorComponent {
-  int32 version = 2
+  int32 version = 3
   int32 id
   int32 entityId
   int32 planetId
@@ -1894,6 +1951,7 @@ EjectorComponent {
   float32 pivotY
   float32 muzzleY
   boolean boost // version >= 2
+  boolean incUsed // version >= 3
   Vector3 localPosN
   float32 localAlt
   Quaternion localRot
@@ -1901,7 +1959,7 @@ EjectorComponent {
 }
 
 SiloComponent {
-  int32 version = 2
+  int32 version = 3
   int32 id
   int32 entityId
   int32 planetId
@@ -1917,12 +1975,13 @@ SiloComponent {
   int32 autoIndex
   boolean hasNode
   boolean boost // version >= 2
+  boolean incUsed // version >= 3
   Vector3 localPos
   Quaternion localRot
 }
 
 LabComponent {
-  int32 version = 2
+  int32 version = 3
   int32 id
   int32 entityId
   int32 pcId
@@ -1937,6 +1996,7 @@ LabComponent {
   int32 extraPowerRatio  // version >= 1
   boolean productive  // version >= 1
   boolean forceAccMode  // version >= 2
+  boolean incUsed // version >= 3
   int32 speed  // version >= 2
   int32 speedOverride  // version >= 2
   boolean researchMode
@@ -2613,7 +2673,7 @@ EnemyBuilderComponent {
 }
 
 DFGBaseComponent {
-  uint8 version = 1
+  uint8 version = 2
   uint16 id
   int32 enemyId if (id > 0)
   int32 builderId if (id > 0)
@@ -2632,6 +2692,7 @@ DFGBaseComponent {
   KeyValuePair<int32, int32> incomingSkills[incomingSkillsCursor] if (id > 0) // id, type
   int32 numPbuilders if (id > 0)
   GrowthPattern_DFGround_Builder pbuilder[numPbuilders] if (id > 0)
+  int32 disableAssaultingAlert if (id > 0) // version >= 2
 }
 
 EnemyFormation {
@@ -3185,7 +3246,7 @@ GrowthPattern_DFSpace_Builder {
 }
 
 DFSCoreComponent {
-  uint8 version = 0
+  uint8 version = 1
   uint16 id
   int32 enemyId if (id > 0)
   int32 builderId if (id > 0)
@@ -3203,6 +3264,7 @@ DFSCoreComponent {
   int32 buildTinderTriggerMinTick if (id > 0)
   int32 buildTinderTriggerKeyTick if (id > 0)
   float32 buildTinderTriggerProbability if (id > 0)
+  int32 disableAssaultingAlert if (id > 0) // version >= 1
 }
 
 DFSNodeComponent {
