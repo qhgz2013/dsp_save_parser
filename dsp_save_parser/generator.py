@@ -679,6 +679,42 @@ def write_py_class(class_def: dict, out_py_file: TextIO, line_no: int):
     if gen_pass_stub:
         out_py_file.write('        pass\n')
     # out_py_file.write('        assert stream.tell() == self.location_end\n')
+
+    # generate get_size method
+    out_py_file.write('\n')
+    out_py_file.write('    def get_size(self) -> int:\n')
+    out_py_file.write('        size = 0\n')
+    for meta in class_attrs.values():
+        if meta['type'] == 'comment':
+            continue
+        if meta['injected']:
+            continue
+        if meta['is_array']:
+            if meta['generated_type'] == 'bytes':
+                size_stmt = ['size += len(self.%s)' % meta['generated_name']]
+            else:
+                size_stmt = ['for t_%s in self.%s:' % (meta['generated_name'], meta['generated_name'])]
+                if meta['type'] in BUILTIN_TYPES:
+                    size_stmt.append('    size += len(%s(t_%s))' % (meta['type'], meta['generated_name']))
+                else:
+                    size_stmt.append('    size += len(t_%s)' % meta['generated_name'])
+        else:
+            if meta['type'] in BUILTIN_TYPES:
+                size_stmt = ['size += len(%s(self.%s))' % (meta['type'], meta['generated_name'])]
+            else:
+                size_stmt = ['size += len(self.%s)' % meta['generated_name']]
+        if meta['if_clause']:
+            size_stmt = ['    %s' % x for x in size_stmt]
+            if_clause_token = camel_to_underline(meta['if_clause']).split(' ')
+            for i, token in enumerate(if_clause_token):
+                if token in KEYWORDS_IN_IF_CLAUSE:  # skip keywords
+                    continue
+                if TOKEN.match(token):
+                    if_clause_token[i] = 'self.%s' % token
+            size_stmt.insert(0, 'if %s:' % ' '.join(if_clause_token))
+        for stmt in size_stmt:
+            out_py_file.write('        %s\n' % stmt)
+    out_py_file.write('        return size\n')
     ending_comment = class_def['ending_comment'].getvalue()
     if len(ending_comment) > 0:
         out_py_file.write('\n')

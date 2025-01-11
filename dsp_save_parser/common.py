@@ -2,6 +2,7 @@ from typing import *
 from typing import BinaryIO
 from struct import unpack, pack
 from abc import ABCMeta
+from io import BytesIO
 
 __all__ = ['ParserBase', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64',
            'string', 'boolean', 'int24', 'FlexibleInt', 'SaveObject']
@@ -39,6 +40,17 @@ class ParserBase:
     def __repr__(self):
         return f'<{self.__class__.__name__} ({self._repr_internal_get_field_repr()})>'
 
+    def get_size(self) -> int:
+        return 0
+
+    def _get_size_via_save(self) -> int:
+        ms = BytesIO()
+        self.save(ms)
+        return ms.tell()
+
+    def __len__(self):
+        return self.get_size()
+
 
 # noinspection PyPep8Naming
 class int8(int, ParserBase):
@@ -48,6 +60,9 @@ class int8(int, ParserBase):
 
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(1, byteorder=_BYTE_ORDER, signed=True))
+
+    def get_size(self):
+        return 1
 
 
 # noinspection PyPep8Naming
@@ -59,6 +74,9 @@ class uint8(int, ParserBase):
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(1, byteorder=_BYTE_ORDER, signed=False))
 
+    def get_size(self):
+        return 1
+
 
 # noinspection PyPep8Naming
 class boolean(int8, ParserBase):
@@ -68,6 +86,9 @@ class boolean(int8, ParserBase):
 
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(1, byteorder=_BYTE_ORDER, signed=False))
+
+    def get_size(self):
+        return 1
 
 
 # noinspection PyPep8Naming
@@ -79,6 +100,9 @@ class int16(int, ParserBase):
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(2, byteorder=_BYTE_ORDER, signed=True))
 
+    def get_size(self):
+        return 2
+
 
 # noinspection PyPep8Naming
 class uint16(int, ParserBase):
@@ -88,6 +112,9 @@ class uint16(int, ParserBase):
 
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(2, byteorder=_BYTE_ORDER, signed=False))
+
+    def get_size(self):
+        return 2
 
 
 # noinspection PyPep8Naming
@@ -99,6 +126,9 @@ class int24(int, ParserBase):
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(3, byteorder=_BYTE_ORDER, signed=True))
 
+    def get_size(self):
+        return 3
+
 
 # noinspection PyPep8Naming
 class int32(int, ParserBase):
@@ -108,6 +138,9 @@ class int32(int, ParserBase):
 
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(4, byteorder=_BYTE_ORDER, signed=True))
+
+    def get_size(self):
+        return 4
 
 
 # noinspection PyPep8Naming
@@ -119,6 +152,9 @@ class uint32(int, ParserBase):
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(4, byteorder=_BYTE_ORDER, signed=False))
 
+    def get_size(self):
+        return 4
+
 
 # noinspection PyPep8Naming
 class int64(int32, ParserBase):
@@ -128,6 +164,9 @@ class int64(int32, ParserBase):
 
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(8, byteorder=_BYTE_ORDER, signed=True))
+
+    def get_size(self):
+        return 8
 
 
 # noinspection PyPep8Naming
@@ -139,6 +178,9 @@ class uint64(int, ParserBase):
     def save(self, stream: _IO_TYPE):
         stream.write(self.to_bytes(8, byteorder=_BYTE_ORDER, signed=False))
 
+    def get_size(self):
+        return 8
+
 
 if _BYTE_ORDER == 'little':
     # noinspection PyPep8Naming
@@ -149,6 +191,10 @@ if _BYTE_ORDER == 'little':
 
         def save(self, stream: _IO_TYPE):
             stream.write(pack('<f', self))
+
+        def get_size(self):
+            return 4
+
 else:
     # noinspection PyPep8Naming
     class float32(float, ParserBase):
@@ -158,6 +204,9 @@ else:
 
         def save(self, stream: _IO_TYPE):
             stream.write(pack('>f', self))
+
+        def get_size(self):
+            return 4
 
 
 if _BYTE_ORDER == 'little':
@@ -169,6 +218,9 @@ if _BYTE_ORDER == 'little':
 
         def save(self, stream: _IO_TYPE):
             stream.write(pack('<d', self))
+
+        def get_size(self):
+            return 8
 else:
     # noinspection PyPep8Naming
     class float64(float32, ParserBase):
@@ -178,6 +230,9 @@ else:
 
         def save(self, stream: _IO_TYPE):
             stream.write(pack('>d', self))
+
+        def get_size(self):
+            return 8
 
 
 # noinspection PyPep8Naming
@@ -205,6 +260,8 @@ class varint(int, ParserBase):
         data_list.append(value)
         stream.write(bytes(data_list))
 
+    def get_size(self) -> int:
+        return self._get_size_via_save()
 
 # noinspection PyPep8Naming
 class string(str, ParserBase):
@@ -217,6 +274,9 @@ class string(str, ParserBase):
         b_str = self.encode('utf-8')
         varint(len(b_str)).save(stream)
         stream.write(b_str)
+
+    def get_size(self) -> int:
+        return self._get_size_via_save()
 
 
 # IOHelper.WriteFlexibleInt
@@ -250,6 +310,22 @@ class FlexibleInt(int32, ParserBase):
         else:
             stream.write(b'\x04')
             stream.write(self.to_bytes(4, byteorder=_BYTE_ORDER, signed=True))
+
+    def get_size(self) -> int:
+        if self == 0:
+            return 1
+        elif self < 0:
+            return 5
+        elif self <= 0xFF:
+            if self <= 4:
+                return 2
+            return 1
+        elif self <= 0xFFFF:
+            return 3
+        elif self <= 0xFFFFFF:
+            return 4
+        else:
+            return 5
 
 
 class SaveObject(ParserBase, metaclass=ABCMeta):

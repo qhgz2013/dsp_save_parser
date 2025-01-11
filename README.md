@@ -77,6 +77,8 @@ with open('your_save_data.dsv', 'rb') as f:
 # do some modifications, for example:
 data.account_data.user_name = 'my_name'  # change player's name
 data.game_data.main_player.sand_count = 99999999  # modify sands
+# if your changes affect the size of the save data, don't forget to re-calculate the whole file length
+data.file_length = len(data)
 
 # save changes
 with open('your_modded_save_data.dsv', 'wb') as f:

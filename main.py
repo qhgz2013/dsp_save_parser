@@ -29,6 +29,8 @@ def main():
         # or modifying save data:
         # data.account_data.user_name = 'my_name'
         # data.game_data.main_player.sand_count = 99999999  # modifying sands
+        # re-calculate the whole file length
+        # data.file_length = len(data)
         # once finished, export to dsv file via:
         # with open(args.save_path + '_modded.dsv', 'wb') as f:
         #     data.save(f)
