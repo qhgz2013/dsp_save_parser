@@ -376,3 +376,22 @@ class SaveObject(ParserBase, metaclass=ABCMeta):
     #             # non typing types
     #             value = annotation(value)
     #     object.__setattr__(self, key, value)
+
+## DECORATORS ##
+# executed whenever a .save() call is made.
+# currently triggers a file_length write at a fixed location in the destination file
+def post_save(decorated):
+    def wrapper(*args, **kw):
+        output = decorated(*args, **kw)
+        # post-save actions
+        # 0.10.31: GameData.WarningSystem is the final object written to file.
+        # Overwrite file_length as final action.
+        if args[0].__class__.__name__ == "WarningSystem":
+            stream = args[1]
+            nf_length = uint32(stream.tell())
+            stream.seek(6)
+            stream.write(nf_length.to_bytes(4, _BYTE_ORDER))
+        #
+        return output
+    return wrapper
+##

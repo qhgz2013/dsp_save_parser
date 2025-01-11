@@ -643,6 +643,7 @@ def write_py_class(class_def: dict, out_py_file: TextIO, line_no: int):
 
     # generate save method
     out_py_file.write('\n')
+    out_py_file.write('    @post_save\n')
     out_py_file.write('    def save(self, stream: BinaryIO):\n')
     # out_py_file.write('        assert stream.tell() == self.location_start\n')
     gen_pass_stub = True
@@ -816,7 +817,7 @@ def generate_parser(def_file: str, out_py_file: str):
                 return
     with open(out_py_file, 'w', encoding='utf8') as f:
         f.write('# Auto-generated file, do not edit\n\n')
-        f.write('from .common import *\nfrom typing import *\nfrom typing import BinaryIO\n\n')
+        f.write('from .common import *\nfrom .common import post_save\nfrom typing import *\nfrom typing import BinaryIO\n\n')
         with open(def_file, 'r', encoding='utf8') as f_def_fs:
             with StringIO(f_def_fs.read()) as f_def:
                 try:
