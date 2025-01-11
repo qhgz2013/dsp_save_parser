@@ -1223,6 +1223,7 @@ PrebuildData {
   int32 id
   int16 protoId if (id != 0)
   int16 modelIndex if (id != 0)
+  int32 ruinId if (id != 0) // version >= 4
   Vector3 pos if (id != 0)
   Quaternion rot if (id != 0)
   Vector3 pos2 if (id != 0)
