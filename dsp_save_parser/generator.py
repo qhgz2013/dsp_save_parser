@@ -623,19 +623,20 @@ def write_py_class(class_def: dict, out_py_file: TextIO, line_no: int):
             out_py_file.write('        %s = %s\n' % (meta['generated_name'], assign_stmt))
         if meta['assertion'] and not meta['injected']:
             if meta['assertion']['type'] == 'ref':
-                out_py_file.write('        assert %s == %s\n' % (meta['generated_name'],
-                                                                 camel_to_underline(meta['assertion']['value'])))
+                out_py_file.write('        assert %s == %s' % (meta['generated_name'],
+                                                               camel_to_underline(meta['assertion']['value'])))
             else:
                 if type(meta['assertion']) == str:
-                    out_py_file.write('        assert %s == %s\n' % (meta['generated_name'],
-                                                                     repr(bytes(meta['assertion']['value'], 'utf8'))))
+                    out_py_file.write('        assert %s == %s' % (meta['generated_name'],
+                                                                   repr(bytes(meta['assertion']['value'], 'utf8'))))
                 elif type(meta['assertion']) == float:
-                    out_py_file.write('        assert abs(%s - %s) < %s\n' % (meta['generated_name'],
-                                                                              repr(meta['assertion']['value']),
-                                                                              repr(FLOAT_COMPARISON_EPS)))
+                    out_py_file.write('        assert abs(%s - %s) < %s' % (meta['generated_name'],
+                                                                            repr(meta['assertion']['value']),
+                                                                            repr(FLOAT_COMPARISON_EPS)))
                 else:
-                    out_py_file.write('        assert %s == %s\n' % (meta['generated_name'],
-                                                                     repr(meta['assertion']['value'])))
+                    out_py_file.write('        assert %s == %s' % (meta['generated_name'],
+                                                                   repr(meta['assertion']['value'])))
+            out_py_file.write(', str(%s)\n' % meta['generated_name'])
 
     out_py_file.write('        location_end = stream.tell()\n')
     pretty_write(out_py_file, slot_items, leading_str='        return cls(', trailing_str=')')
