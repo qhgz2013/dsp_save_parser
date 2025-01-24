@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 10
-// releaseGameVersion: 31
-// buildGameVersion: 24710
+// releaseGameVersion: 32
+// buildGameVersion: 25552
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -12,6 +12,11 @@
 Vector2 {
   float32 x
   float32 y
+}
+
+Vector2Int {
+  int32 x
+  int32 y
 }
 
 Vector3 {
@@ -113,7 +118,7 @@ AccountData {
 }
 
 GameData {
-  int32 version = 11
+  int32 version = 12
   int32 patch = 19 // version >= 4
   AccountData accountData // repeated, version >= 3
   string gameName
@@ -129,6 +134,7 @@ GameData {
   Player mainPlayer
   int32 factoryCount
   GalacticTransport galacticTransport
+  GalacticDigitalSystem galacticDigital // version >= 12
   TrashSystem trashSystem // version >= 5
   PlanetFactory factories[factoryCount]
   int32 dysonSpheresCount
@@ -140,6 +146,10 @@ GameData {
   MilestoneSystem milestoneSystem // version >= 7
   GoalSystem goalSystem // version >= 11
   WarningSystem warningSystem // version >= 9
+}
+
+GalacticDigitalSystem {
+  int32 version = 0
 }
 
 GoalSystem {
@@ -235,7 +245,7 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 15
+  int32 version = 17
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
@@ -250,6 +260,7 @@ GamePrefsData {
   boolean detailDefense // version >= 10
   boolean detailSign // version >= 1
   boolean detailIcon // version >= 1
+  boolean detailHpBar //version >= 16
   int32 numTutorialsShowing // version >= 2
   int32 tutorialsShowing[numTutorialsShowing] // version >= 2
   int32 numAstroNames // version >= 5
@@ -287,6 +298,9 @@ GamePrefsData {
   int64 uiControlPanelDispenserPairing // version >= 14
   int32 uiControlPanelDispenserPairingPlanetId // version >= 14
   int32 uiGoalPanelState // version >= 15 EUIGoalPanelState { None, Closed, Collapse, Expand }
+  int32 numMarkerSelectedColor // version >= 17 (in LoadMarkerPrefs)
+  int32 markerSelectedColor[numMarkerSelectedColor] // version >= 17
+  boolean autoOpenDashboardOnAddStatPlan // version >= 17
 }
 
 // used in GamePrefsData
@@ -296,9 +310,10 @@ AstroName {
 }
 
 ControlPanelFilter {
-  int32 version = 0
+  int32 version = 1
   int32 typeFilter // EEntryFilter {None = 0, InterstellarStation = 2, OrbitCollector = 4, InterstellarStationAndCollector = 6, LocalStation = 8, IntraplanetaryStation = 10, VeinCollector = 16, IntraplanetStationAndCollector = 26, AnyStation = 30, Dispenser = 32}
   int32 astroFilter
+  string tagFilter // version >= 1
   int32 numItemsFilter
   int32 itemsFilter[numItemsFilter]
   int32 stateFilter
@@ -416,12 +431,184 @@ JournalData {
 }
 
 GameStatData {
-  int32 version = 2
+  int32 version = 3
   int32 numTechHashedHistory
   int32 techHashedHistory[numTechHashedHistory]
   ProductionStatistics statistics
   KillStatistics kill // version >= 1
   TrafficStatistics traffic // version >= 2
+  CustomCharts charts // version >= 3
+}
+
+CustomCharts {
+  int32 version = 0
+  DashboardViewState currentView
+  StatPlanPool statPlans
+  DashboardLayout dashboardLayout
+  WatchLayout watchLayout
+}
+
+DashboardViewState {
+  int32 version = 0
+  int32 pageIndex
+}
+
+StatPlanPool {
+  int32 capacity
+  int32 cursor
+  int32 recycleCursor
+  StatPlanExportStruct buffer[cursor-1]
+  int32 recycleIds[recycleCursor]
+  int32 order[cursor - recycleCursor - 1]
+}
+
+StatPlanExportStruct {
+  int32 type // EStatPlanType
+  AstroItemProductionStatPlan data_1 if (type == 1) // identified by "Generic" Attribute
+  AstroPowerStatPlan data_2 if (type == 2)
+  AstroResourceStatPlan data_8 if (type == 8)
+  AstroStorageStatPlan data_6 if (type == 6)
+  AstroTransportStatPlan data_5 if (type == 5)
+  DysonSphereStatPlan data_3 if (type == 3)
+  PlanetATFieldStatPlan data_12 if (type == 12)
+  SingleMonitorStatPlan data_56 if (type == 56)
+  SingleProducerStatPlan data_51 if (type == 51)
+  SingleStorageStatPlan data_54 if (type == 54)
+  TechStatPlan data_11 if (type == 11)
+  VeinGroupStatPlan data_21 if (type == 21)
+  WarningStatPlan data_1000 if (type == 1000)
+}
+
+StatPlan { // base class for other stat plans
+  int32 version = 0
+  int32 id
+  int32 type // EStatPlanType
+  int32 nameLength
+  string name if (nameLength > 0)
+}
+
+AstroItemProductionStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 itemId
+  int32 timeLevel
+  StatPlan base
+}
+
+AstroPowerStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 timeLevel
+  int32 objId
+  StatPlan base
+}
+
+AstroResourceStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  StatPlan base
+}
+
+AstroStorageStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 itemId
+  StatPlan base
+}
+
+AstroTransportStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 timeLevel
+  boolean isInterstellar
+  StatPlan base
+}
+
+DysonSphereStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 timeLevel
+  StatPlan base
+}
+
+PlanetATFieldStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  StatPlan base
+}
+
+SingleMonitorStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 objId
+  StatPlan base
+}
+
+SingleProducerStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 objId
+  float32 productionSpeed // expr "averageCycleSpeed * speedStatScale / 3600f"
+  StatPlan base
+}
+
+SingleStorageStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 objId
+  StatPlan base
+}
+
+TechStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 timeLevel
+  StatPlan base
+}
+
+VeinGroupStatPlan { // derived from StatPlan
+  int32 version = 0
+  int32 astroFilter
+  int32 veinGroupIdx
+  StatPlan base
+}
+
+WarningStatPlan { // derived from StatPlan
+  int32 version = 0
+  StatPlan base
+}
+
+DashboardLayout {
+  int32 version = 0
+  int32 numPages // fixed 10
+  ExportStruct<int32, DashboardPage> page[numPages]
+}
+
+DashboardPage {
+  int32 version = 0
+  int32 nameLength
+  string name if (nameLength > 0)
+  int32 numChartDatas
+  ChartData chartDatas[numChartDatas]
+}
+
+ChartData {
+  int32 version = 0
+  Vector2Int pos
+  Vector2Int size
+  int32 depth
+  int32 statPlanId
+  int32 presetIndex
+  int32 genericStyleIndex
+  int32 backgroundStyleIndex
+  int32 borderStyleIndex
+  int32 numDisplayTypeParams // fixed 16
+  int32 displayTypeParams[numDisplayTypeParams]
+}
+
+WatchLayout {
+  int32 version = 0
+  int32 numChartDatas
+  ChartData chartDatas[numChartDatas]
 }
 
 ProductionStatistics {
@@ -523,12 +710,12 @@ AstroTrafficStat {
 }
 
 TrafficStat {
-  int32 version = 0
-  int32 numCount // fixed 720
+  int32 version = 1
+  int32 numCount // fixed 1080
   int32 count[numCount]
-  int32 numCursor // fixed 12
+  int32 numCursor // fixed 18
   int32 cursor[numCursor]
-  int32 numTotal // fixed 14
+  int32 numTotal // fixed 21
   int64 total[numTotal]
   int32 itemId
 }
@@ -1133,7 +1320,7 @@ VeinGroup {
 }
 
 EntityData {
-  uint8 version = 11
+  uint8 version = 12
   int32 id
   int16 protoId if (id > 0)
   int16 modelIndex if (id > 0)
@@ -1176,6 +1363,7 @@ EntityData {
   cid spraycoaterId        if (id > 0 and speakerId            != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + combatStatId.value + constructionStatId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + dispenserId.value + turretId.value + beaconId.value + fieldGenId.value + battleBaseId.value + constructionModuleId.value + combatModuleId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value + speakerId.value)  // version >= 5
   cid pilerId              if (id > 0 and spraycoaterId        != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + combatStatId.value + constructionStatId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + dispenserId.value + turretId.value + beaconId.value + fieldGenId.value + battleBaseId.value + constructionModuleId.value + combatModuleId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value + speakerId.value + spraycoaterId.value)  // version >= 5
   cid extraInfoId          if (id > 0 and pilerId              != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + combatStatId.value + constructionStatId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + dispenserId.value + turretId.value + beaconId.value + fieldGenId.value + battleBaseId.value + constructionModuleId.value + combatModuleId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value + speakerId.value + spraycoaterId.value + pilerId.value)  // version >= 7
+  cid markerId             if (id > 0 and extraInfoId          != null and idSum > beltId.value + powerConId.value + inserterId.value + assemblerId.value + labId.value + powerNodeId.value + powerGenId.value + combatStatId.value + constructionStatId.value + fractionateId.value + storageId.value + tankId.value + splitterId.value + ejectorId.value + minerId.value + siloId.value + stationId.value + dispenserId.value + turretId.value + beaconId.value + fieldGenId.value + battleBaseId.value + constructionModuleId.value + combatModuleId.value + powerAccId.value + powerExcId.value + warningId.value + monitorId.value + speakerId.value + spraycoaterId.value + pilerId.value + extraInfoId.value)  // version >= 12
   // seems stupid, but works
 }
 
@@ -1219,7 +1407,7 @@ PrebuildExportStruct {
 }
 
 PrebuildData {
-  uint8 version = 6
+  uint8 version = 7
   int32 id
   int16 protoId if (id != 0)
   int16 modelIndex if (id != 0)
@@ -1245,6 +1433,8 @@ PrebuildData {
   boolean isWarningSetted if (id != 0) // version >= 4
   int32 paramCount if (id != 0)
   int32 parameters[paramCount] if (id != 0)
+  int32 contentLength if (id != 0) // version >= 7
+  string content if (id != 0 && contentLength > 0) // version >= 7
 }
 
 CraftData {
@@ -1863,7 +2053,7 @@ InserterComponent {
 }
 
 AssemblerComponent {
-  int32 version = 4
+  int32 version = 5
   int32 id
   int32 entityId
   int32 pcId
@@ -1878,6 +2068,8 @@ AssemblerComponent {
   boolean productive  // version >= 2
   boolean forceAccMode  // version >= 3
   boolean incUsed // version >= 4
+  int32 cycleCount // version >= 5
+  int32 extraCycleCount // version >= 5
   int16 recipeId  // int32 for version 0
   uint8 recipeType if (recipeId > 0)
   int32 timeSpend if (recipeId > 0)
@@ -1901,7 +2093,7 @@ AssemblerComponent {
 }
 
 FractionatorComponent {
-  int32 version = 4
+  int32 version = 5
   int32 id
   int32 entityId
   int32 pcId
@@ -1935,7 +2127,7 @@ FractionatorComponent {
 }
 
 EjectorComponent {
-  int32 version = 3
+  int32 version = 4
   int32 id
   int32 entityId
   int32 planetId
@@ -1949,10 +2141,13 @@ EjectorComponent {
   int32 bulletCount
   int32 bulletInc  // version >= 1
   int32 orbitId
+  int32 findingOrbitId // version >= 4
+  int32 runtimeOrbitId // version >= 4
   float32 pivotY
   float32 muzzleY
   boolean boost // version >= 2
   boolean incUsed // version >= 3
+  boolean autoOrbit // version >= 4
   Vector3 localPosN
   float32 localAlt
   Quaternion localRot
@@ -1982,7 +2177,7 @@ SiloComponent {
 }
 
 LabComponent {
-  int32 version = 3
+  int32 version = 4
   int32 id
   int32 entityId
   int32 pcId
@@ -2006,6 +2201,8 @@ LabComponent {
   // matrix mode
   int32 timeSpend if (not researchMode and recipeId > 0)
   int32 extraTimeSpend if (not researchMode and recipeId > 0)  // version >= 1
+  int32 cycleCount if (not researchMode and recipeId > 0)  // version >= 4
+  int32 extraCycleCount if (not researchMode and recipeId > 0)  // version >= 4
   int32 numRequires if (not researchMode and recipeId > 0)
   int32 requires[numRequires] if (not researchMode and recipeId > 0)
   int32 numRequireCounts if (not researchMode and recipeId > 0)
@@ -2272,13 +2469,14 @@ RGBAF {
 }
 
 DigitalSystem {
-  int32 version = 1
+  int32 version = 2
   int32 speakerCapacity
   int32 speakerCursor
   int32 speakerRecycleCursor
   SpeakerComponent speakerPool[speakerCursor - 1]
   int32 speakerRecycle[speakerRecycleCursor]
   ObjectPool<ExtraInfoComponent> extraInfoes // version >= 1
+  ObjectPool<MarkerComponent> markers // version >= 2
 }
 
 SpeakerComponent {
@@ -2312,6 +2510,32 @@ ExtraInfoComponent {
   int32 objectId
   int32 infoLen
   string info if (infoLen > 0)
+}
+
+MarkerComponent {
+  int32 version = 0
+  int32 id
+  int32 gid
+  int32 astroId
+  int32 entityId
+  int32 pcId
+  int32 iconLayout // EMarkerIconLayout
+  int32 icon0
+  int32 icon1
+  int32 icon2
+  int32 icon3
+  int32 level // EMarkerLevel
+  uint8 color
+  float32 height
+  float32 power
+  Vector3 pos
+  Quaternion rot
+  int32 nameLength
+  string name if (nameLength > 0)
+  int32 tagsLength
+  string tags if (tagsLength > 0)
+  int32 commentLength
+  string comment if (commentLength > 0)
 }
 
 DysonSphere {
