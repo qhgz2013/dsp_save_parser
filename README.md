@@ -2,7 +2,7 @@
 
 A python based save data parser for Dyson Sphere Program.
 
-Current version: `0.10.32.25552` (Updated on 25 Jan, 2025)
+Current version: `0.10.32.25699` (Updated on 19 Feb, 2025)
 
 ## Usage
 
@@ -20,7 +20,7 @@ with open('your_save_data.dsv', 'rb') as f:
 `main.py` provides a basic skeleton structure for parsing a DSP save file: run `python main.py [save_data_path]` and it would print something like:
 
 ```text
-<GameSave [0-72529107] (header=<VFSaveHeader>, file_length=72529107, version=7, is_sandbox_mode=0, is_peace_mode=0, major_game_version=0, minor_game_version=10, release_game_version=32, build_game_version=25552, game_tick=13676945, now_ticks=638733299466506066, size_of_png_file=204725, screen_shot_png_file=<bytes>, account_data=<AccountData>, dyson_sphere_energy_gen_current_tick=42976695, game_data=<GameData>)>
+<GameSave [0-73086344] (header=<VFSaveHeader>, file_length=73086344, version=7, is_sandbox_mode=0, is_peace_mode=0, major_game_version=0, minor_game_version=10, release_game_version=32, build_game_version=25699, game_tick=13953330, now_ticks=638757505537597567, size_of_png_file=228663, screen_shot_png_file=<bytes>, account_data=<AccountData>, dyson_sphere_energy_gen_current_tick=49606866, game_data=<GameData>)>
 ```
 
 *If `save_data_path` is not specified, the program will use the last exit save data `~\Documents\Dyson Sphere Program\Save\_lastexit_.dsv` by default.*

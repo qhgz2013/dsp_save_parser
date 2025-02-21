@@ -3,7 +3,7 @@
 // majorGameVersion: 0
 // minorGameVersion: 10
 // releaseGameVersion: 32
-// buildGameVersion: 25552
+// buildGameVersion: 25699
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -119,7 +119,7 @@ AccountData {
 
 GameData {
   int32 version = 12
-  int32 patch = 19 // version >= 4
+  int32 patch = 20 // version >= 4
   AccountData accountData // repeated, version >= 3
   string gameName
   GameDesc gameDesc
@@ -142,7 +142,7 @@ GameData {
   SpaceSector spaceSector // version >= 10
   int32 zero1 = 0
   int32 zero2 = 0
-  GameAbnormalityData gameAbnormality // GameAbnormalityData_0925
+  GameAbnormalityData_0925 gameAbnormality
   MilestoneSystem milestoneSystem // version >= 7
   GoalSystem goalSystem // version >= 11
   WarningSystem warningSystem // version >= 9
@@ -626,23 +626,13 @@ KillStatistics {
   int32 numStarKillStatPool
   ExportStruct<uint8, AstroKillStat> starKillStatPool[numStarKillStatPool]
   int32 numFactoryKillStatPool
-  ExportStruct<uint8, FactoryKillStat> factoryKillStatPool[numFactoryKillStatPool]
-  ExportStruct<uint8, MechaKillStat> mechaKillStat
+  ExportStruct<uint8, AstroKillStat> factoryKillStatPool[numFactoryKillStatPool]
+  ExportStruct<uint8, AstroKillStat> mechaKillStat
   int32 numFavoriteIds
   int32 favoriteIds[numFavoriteIds]
 }
 
 AstroKillStat {
-  int32 version = 0
-  ExportStruct<uint8, KillStat> killStatPool[2048]
-}
-
-FactoryKillStat {
-  int32 version = 0
-  ExportStruct<uint8, KillStat> killStatPool[2048]
-}
-
-MechaKillStat {
   int32 version = 0
   ExportStruct<uint8, KillStat> killStatPool[2048]
 }
@@ -1261,7 +1251,7 @@ PlanetFactory {
   int32 ruinCapacity
   int32 ruinCursor
   int32 ruinRecycleCursor
-  RuinPool ruinPool[ruinCursor - 1]
+  RuinData ruinPool[ruinCursor - 1]
   int32 ruinRecycle[ruinRecycleCursor]
   CargoContainer cargoContainer
   CargoTraffic cargoTraffic
@@ -1291,7 +1281,7 @@ BucketData_ExportStruct {
   int32 bucketRecycleCursor if (i < 362)
 }
 
-RuinPool {
+RuinData {
   uint8 version = 1
   int32 id
   int16 modelIndex if (id > 0)
@@ -1747,7 +1737,7 @@ FactoryStorage {
   int32 tankCapacity
   int32 tankCursor
   int32 tankRecycleCursor
-  TaskComponent tankPool[tankCursor - 1]
+  TankComponent tankPool[tankCursor - 1]
   int32 tankRecycle[tankRecycleCursor]
 }
 
@@ -1758,7 +1748,7 @@ StorageExportStruct {
   StorageComponent storage if (available != 0)
 }
 
-TaskComponent {
+TankComponent {
   int32 version = 1
   int32 id
   int32 entityId
@@ -2802,7 +2792,7 @@ DysonNodeRData {
   Quaternion layerRot
 }
 
-GameAbnormalityData {
+GameAbnormalityData_0925 {
   int32 version = 0
   int32 reserved2 = 0
   int32 flag  // = 3, when flag = 1 or 2, method "ClearAbnormality" is called
@@ -2813,10 +2803,10 @@ GameAbnormalityData {
 // inlined
 GameAbnormalityDataRow {
   int32 numCol  // = 30
-  AbnormalityData data[numCol]
+  AbnormalityRuntimeData data[numCol]
 }
 
-AbnormalityData {
+AbnormalityRuntimeData {
   uint8 version = 0
   uint8 protoId
   int64 abnormalTime if (protoId > 0)
@@ -2842,11 +2832,11 @@ WarningSystem {
   int32 warningCapacity
   int32 warningCursor
   int32 warningRecycleCursor
-  WarningPool warningPool[warningCursor - 1]
+  WarningData warningPool[warningCursor - 1]
   int32 warningRecycle[warningRecycleCursor]
 }
 
-WarningPool {
+WarningData {
   int32 version = 1
   int32 id
   int32 state

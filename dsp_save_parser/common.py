@@ -333,46 +333,9 @@ class SaveObject(ParserBase, metaclass=ABCMeta):
     """The start location of the deserialized object in the file."""
     location_end: int
     """The end location of the deserialized object in the file."""
-    # _skip_setattr_check: bool
-    # """Controlled by generated codes, set to True during __init__ calls to accelerate parsing"""
 
     def __repr__(self):
         if self.location_start == -1 and self.location_end == -1:
             return super().__repr__()
         return f'<{self.__class__.__name__} [{self.location_start}-{self.location_end}] ' \
                f'({self._repr_internal_get_field_repr()})>'
-
-    # def __setattr__(self, key, value):
-    #     if SaveObject._skip_setattr_check:
-    #         object.__setattr__(self, key, value)
-    #         return
-    #     if key not in self.__annotations__:
-    #         super().__setattr__(key, value)
-    #         return
-    #     # type casting for basic types like (u)int8/16/24/32 & float32/64 & string in setattr hook
-    #     if value is not None:
-    #         # typing handling
-    #         annotation = self.__annotations__[key]
-    #         if isinstance(annotation, str):
-    #             # user-defined class in save_format.txt, skip type conversion: user should handle it properly
-    #             pass
-    #         elif annotation.__module__ == 'typing':
-    #             annotation_name = getattr(annotation, '__name__', None)
-    #             if annotation_name is None:  # fallback option: in Py3.6 __name__ is unavailable for Union type
-    #                 annotation_name = annotation.__class__.__name__
-    #             if annotation_name == 'List':
-    #                 assert isinstance(value, list)
-    #                 elem_type = annotation.__args__[0]
-    #                 if type(elem_type) == type:
-    #                     for i, elem in enumerate(value):
-    #                         if not isinstance(elem, elem_type):
-    #                             value[i] = elem_type(elem)
-    #             elif annotation_name == 'Union' or annotation_name.startswith('_Union'):
-    #                 # Optional[T] -> Union[T, None]
-    #                 elem_type = annotation.__args__[0]
-    #                 if type(elem_type) == type and not isinstance(value, elem_type):
-    #                     value = elem_type(value)
-    #         elif type(value) != annotation:
-    #             # non typing types
-    #             value = annotation(value)
-    #     object.__setattr__(self, key, value)
