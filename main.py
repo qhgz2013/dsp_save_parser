@@ -17,14 +17,14 @@ def main():
         # do sth with the save data here, for example, exporting the vein amounts for each planet:
         #
         # from collections import defaultdict
-        # for factory in data.game_data.factories:
+        # planet_data_node_list = data.game_data.galaxy.data
+        # while planet_data_node_list is not None and planet_data_node_list.id != -1:
         #     amount_dict = defaultdict(int)
-        #     # from 0.9.27: "factory.planet.vein_amounts" is not used and keeps zero
-        #     for vein_data in factory.vein_pool:
-        #         if vein_data.id == 0:
-        #             continue
+        #     # from 0.10.32.25783: vein data moved to GalaxyData
+        #     for vein_data in planet_data_node_list.value.vein_groups:
         #         amount_dict[vein_data.type] += vein_data.amount
-        #     print(factory.planet_id, factory.planet_theme, amount_dict)
+        #     print(planet_data_node_list.id, amount_dict)
+        #     planet_data_node_list = planet_data_node_list.next
         #
         # or modifying save data:
         # data.account_data.user_name = 'my_name'
