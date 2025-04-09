@@ -3,7 +3,7 @@
 // majorGameVersion: 0
 // minorGameVersion: 10
 // releaseGameVersion: 32
-// buildGameVersion: 25699
+// buildGameVersion: 25783
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -72,6 +72,13 @@ ExportStruct<IndexType, ValueType> {
   ValueType data if (index != 0)
 }
 
+LinkedListTermM1<IndexType, ValueType> {
+  // linked list with termination id -1
+  IndexType id
+  ValueType value if (id != -1)
+  LinkedListTermM1<IndexType, ValueType> next if (id != -1)
+}
+
 // ObjectPool_ExportStruct<T> {
 //  int32 index
 //  T data if (index != 0)
@@ -118,7 +125,7 @@ AccountData {
 }
 
 GameData {
-  int32 version = 12
+  int32 version = 13
   int32 patch = 20 // version >= 4
   AccountData accountData // repeated, version >= 3
   string gameName
@@ -127,6 +134,7 @@ GameData {
   GameAchievementData gameAchievement // version >= 7
   GamePrefsData preferences // version >= 1
   GameHistoryData history
+  GalaxyData galaxy // version >= 13
   boolean hidePlayerModel // version >= 2
   boolean disableController // version >= 2
   GameStatData statistics
@@ -150,6 +158,22 @@ GameData {
 
 GalacticDigitalSystem {
   int32 version = 0
+}
+
+GalaxyData {
+  int32 version = 0
+  LinkedListTermM1<int32, PlanetScannedData> data // actually calls PlanetData.ImportScannedData
+}
+
+PlanetScannedData {
+  int32 version = 0
+  float32 landPercent
+  Vector3 veinBiasVector
+  Vector3 birthPoint
+  Vector3 birthResourcePoint0
+  Vector3 birthResourcePoint1
+  int32 numVeinGroups
+  VeinGroup veinGroups[numVeinGroups - 1]
 }
 
 GoalSystem {
@@ -1294,15 +1318,16 @@ RuinData {
 PlanetData {
   int32 numModData
   uint8 modData[numModData]
-  int32 numVeinAmounts
+  int32 numVeinAmounts // set to 0 since 0.10.32.25783, refers to PlanetScannedData
   int64 veinAmounts[numVeinAmounts]
-  int32 numVeinGroups
+  int32 numVeinGroups // set to 0 since 0.10.32.25783, refers to PlanetScannedData
   VeinGroup veinGroups[numVeinGroups]
 }
 
 VeinGroup {
   // EVeinType { None = 0, Iron = 1, Copper = 2, Silicium = 3, Titanium = 4, Stone = 5, Coal = 6, Oil = 7,
   //     Fireice = 8, Diamond = 9, Fractal = 10, Crysrub = 11, Grat = 12, Bamboo = 13, Mag = 14, Max = 15 }
+  int32 version = 0
   int32 type
   Vector3 pos
   int32 count
@@ -1991,7 +2016,7 @@ FactorySystem {
 }
 
 MinerComponent {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 entityId
   int32 pcId
@@ -2008,7 +2033,7 @@ MinerComponent {
   int32 minimumVeinAmount
   int32 productId
   int32 productCount
-  uint32 seed
+  float64 costFrac // version >= 2
 }
 
 InserterComponent {
@@ -2292,7 +2317,7 @@ DispenserStore {
 }
 
 StationComponent {
-  int32 version = 7
+  int32 version = 8
   int32 id
   int32 gid
   int32 entityId
@@ -2340,6 +2365,10 @@ StationComponent {
   int32 numCurrentCollections
   float32 currentCollections[numCurrentCollections]
   int32 collectSpeed
+  uint8 numDroneDispatchStatus // version >= 8
+  uint8 droneDispatchStatus[numDroneDispatchStatus] // version >= 8
+  uint8 droneStatusCursor // version >= 8
+  uint8 droneTaskInterval // version >= 8
   float64 tripRangeDrones  // version >= 2
   float64 tripRangeShips  // version >= 2
   boolean includeOrbitCollector  // version >= 2

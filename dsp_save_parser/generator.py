@@ -484,8 +484,8 @@ def write_template_py_class(class_def: dict, template_type_list: list, out_py_fi
                 meta['template_type_list'][i] = template_type_mappings[type_name]
         if len(meta['template_type_list']) > 0:
             template_class_gen_list.append((meta['type'], meta['template_type_list']))
-    write_py_class(new_class_def, out_py_file, line_no)
     _generated_template_classes.add(template_class_name)
+    write_py_class(new_class_def, out_py_file, line_no)
 
     # recursively generate template classes
     for type_name, template_type_list in template_class_gen_list:
