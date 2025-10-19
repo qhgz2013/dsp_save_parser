@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 10
-// releaseGameVersion: 32
-// buildGameVersion: 25783
+// releaseGameVersion: 33
+// buildGameVersion: 27005
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -269,13 +269,14 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 17
+  int32 version = 18
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
   int32 reformBrushType // version >= 4
   int32 reformBrushDecalType // version >= 7
   int32 reformBrushColor // version >= 4
+  boolean reformBuryVeins // version >= 18
   int32 numReplicatorMultipliers // version >= 1
   KeyValuePair<int32, int32> replicatorMultipliers[numReplicatorMultipliers] // version >= 1
   boolean detailPower // version >= 1
@@ -306,11 +307,21 @@ GamePrefsData {
   boolean dismantleFilterFacility // version >= 4
   boolean dismantleFilterBelt // version >= 4
   boolean dismantleFilterInserter // version >= 4
+  boolean blueprintSelectReform // version >= 18
+  boolean blueprintSelectUndecalReforms // version >= 18
+  boolean blueprintReformPartialPaste // version >= 18
+  boolean blueprintReformFillOnly // version >= 18
+  boolean blueprintSaveReform // version >= 18
+  boolean blueprintQuickPaste // version >= 18
+  boolean blueprintUseReforms // version >= 18
+  boolean blueprintUsePalette // version >= 18
+  boolean blueprintAutoBuryBase // version >= 18
   boolean dysonSphereHideFarSideInEditor // version >= 6
   boolean dysonSphereHideRocketBodies // version >= 8
   boolean techTreeShowProperty // version >= 9
   int32 turretBurstMode // version >= 10
   int32 fastBuildBatchSize // version >= 12
+  boolean instantDismantle // version >= 18
   boolean sandboxIsDirectlyObtain // version >= 13
   boolean sandboxDirectlyObtainIsStack // version >= 13
   ControlPanelFilter uiControlPanelFilter // version >= 14, in SaveUIControlPanelWindowPrefs
@@ -321,6 +332,7 @@ GamePrefsData {
   int32 uiControlPanelIntraplanetaryPairingPlanetId // version >= 14
   int64 uiControlPanelDispenserPairing // version >= 14
   int32 uiControlPanelDispenserPairingPlanetId // version >= 14
+  int32 dfMonitorDisplayMode // version >= 18
   int32 uiGoalPanelState // version >= 15 EUIGoalPanelState { None, Closed, Collapse, Expand }
   int32 numMarkerSelectedColor // version >= 17 (in LoadMarkerPrefs)
   int32 markerSelectedColor[numMarkerSelectedColor] // version >= 17
@@ -346,7 +358,7 @@ ControlPanelFilter {
 }
 
 GameHistoryData {
-  int32 version = 17
+  int32 version = 19
   int32 numRecipeUnlocked
   int32 recipeUnlocked[numRecipeUnlocked]
   int32 numEnemyDropItemUnlocked // version >= 11
@@ -366,6 +378,7 @@ GameHistoryData {
   int32 techQueue[numTechQueue] // version >= 1
   int32 universeObserveLevel
   int32 blueprintLimit // version >= 4
+  int32 bpReformLimit // version >= 19
   float32 solarSailLife
   float32 solarEnergyLossRate
   boolean useIonLayer
@@ -504,11 +517,12 @@ StatPlanExportStruct {
 }
 
 StatPlan { // base class for other stat plans
-  int32 version = 0
+  int32 version = 1
   int32 id
   int32 type // EStatPlanType
   int32 nameLength
   string name if (nameLength > 0)
+  int32 warningId // version >= 1
 }
 
 AstroItemProductionStatPlan { // derived from StatPlan
@@ -590,10 +604,18 @@ TechStatPlan { // derived from StatPlan
 }
 
 VeinGroupStatPlan { // derived from StatPlan
-  int32 version = 0
+  int32 version = 1
   int32 astroFilter
   int32 veinGroupIdx
+  int32 veinProtoId // version >= 1
+  int32 numExhaustedVeins // version >= 1
+  ExhaustedVeins exhaustedVeins[numExhaustedVeins] // version >= 1
   StatPlan base
+}
+
+ExhaustedVeins {
+  int32 life
+  Vector3 pos
 }
 
 WarningStatPlan { // derived from StatPlan
@@ -781,7 +803,7 @@ DeliveryPackageGrid {
 }
 
 Mecha {
-  int32 version = 10
+  int32 version = 11
   float64 coreEnergyCap
   float64 coreEnergy
   float64 corePowerGen
@@ -790,6 +812,7 @@ Mecha {
   int32 reactorItemId
   int32 reactorItemInc // version >= 4
   boolean autoReplenishFuel // version >= 7
+  boolean autoReplenishWarper // version >= 11
   StorageComponent reactorStorage
   StorageComponent warpStorage
   float64 energyConsumptionCoef // version >= 8
@@ -953,13 +976,14 @@ EnemyHatredTarget {
 }
 
 CombatModuleComponent {
-  int32 version = 2
+  int32 version = 3
   int32 id
   int32 entityId
   int32 battleBaseId
   boolean moduleEnabled
   boolean autoReplenishFleet
   boolean attackRelay // version >= 2
+  boolean attackBuilding // version >= 3
   float32 sensorRange
   int32 tickSinceLastEnemy
   int32 fleetCount
@@ -2866,11 +2890,12 @@ WarningSystem {
 }
 
 WarningData {
-  int32 version = 1
+  int32 version = 2
   int32 id
   int32 state
   int32 signalId
-  int32 detailId // version >= 1
+  int32 detailId1 // version >= 1
+  int32 detailId2 // version >= 2
   int32 factoryId
   int32 astroId
   int32 objectId
@@ -3165,7 +3190,7 @@ TimedSkillTarget {
 }
 
 TurretComponent {
-  int32 version = 3
+  int32 version = 4
   int32 id
   int32 entityId
   int32 pcId
@@ -3191,7 +3216,7 @@ TurretComponent {
   int32 roundFire
   int32 muzzleFire
   float32 supernovaStrength
-  uint8 phasePos // version >= 3
+  int16 phasePos // version >= 3, changed to int16 since version 4
   int32 hatred0Target
   int32 hatred0Value
   int16 itemId
