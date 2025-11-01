@@ -1,0 +1,170 @@
+// begin from BlueprintData.Import
+
+BlueprintData {
+  int32 version
+  int32 cursorOffsetX
+  int32 cursorOffsetY
+  int32 cursorTargetArea
+  int32 dragBoxSizeX
+  int32 dragBoxSizeY
+  int32 primaryAreaIdx
+  uint8 numAreas
+  BlueprintArea areas[numAreas]
+  int32 numBuildings
+  BlueprintBuilding buildings[numBuildings]
+  int32 patch if (version >= 2) default (version)
+  uint8 hasReformData if (version >= 2)
+  BPReformData reformData if (hasReformData)
+}
+
+BlueprintArea {
+  int8 index
+  int8 parentIndex
+  int16 tropicAnchor
+  int16 areaSegments
+  int16 anchorLocalOffsetX
+  int16 anchorLocalOffsetY
+  int16 width
+  int16 height
+}
+
+Vector3 {
+  float32 x
+  float32 y
+  float32 z
+}
+
+BlueprintBuilding {
+  int32 version
+  BlueprintBuildingLayoutV102 layout_102 if (version <= -102)
+  BlueprintBuildingLayoutV101 layout_101 if (version == -101)
+  BlueprintBuildingLayoutV100 layout_100 if (version == -100)
+  BlueprintBuildingLayoutDefault layout_default if (version >= -99) props (version)
+  // -101 is current export version
+}
+
+BlueprintBuildingLayoutDefault {
+  injected int32 index = 0
+  int8 areaIndex
+  Vector3 localOffset
+  Vector3 localOffset2
+  // pitch & pitchs are zeros
+  float32 yaw
+  float32 yaw2
+  // tilt & tilt2 are zeros
+  int16 itemId
+  int16 modelIndex
+  int32 tempOutputObjIdx
+  int32 tempInputObjIdx
+  int8 outputToSlot
+  int8 inputFromSlot
+  int8 outputFromSlot
+  int8 inputToSlot
+  int8 outputOffset
+  int8 inputOffset
+  int16 recipeId
+  int16 filterId
+  int16 numParameters
+  int32 parameters[numParameters]
+}
+
+BlueprintBuildingLayoutV100 {
+  int32 index
+  int8 areaIndex
+  Vector3 localOffset
+  Vector3 localOffset2
+  // pitch & pitchs are zeros
+  float32 yaw
+  float32 yaw2
+  float32 tilt
+  // tilt2 is zeros
+  int16 itemId
+  int16 modelIndex
+  int32 tempOutputObjIdx
+  int32 tempInputObjIdx
+  int8 outputToSlot
+  int8 inputFromSlot
+  int8 outputFromSlot
+  int8 inputToSlot
+  int8 outputOffset
+  int8 inputOffset
+  int16 recipeId
+  int16 filterId
+  int16 numParameters
+  int32 parameters[numParameters]
+}
+
+BlueprintBuildingLayoutV101 {
+  int32 index
+  int16 itemId
+  int16 modelIndex
+  int8 areaIndex
+  Vector3 localOffset
+  float32 yaw
+  float32 tilt if ((itemId > 2000 && itemId < 2010) || (itemId > 2010 && itemId < 2020)) default (0)
+  float32 pitch if (itemId > 2010 && itemId < 2020) default (0)
+  Vector3 localOffset2 if (itemId > 2010 && itemId < 2020) default (localOffset)
+  float32 yaw2 if (itemId > 2010 && itemId < 2020) default (yaw)
+  float32 tilt2 if (itemId > 2010 && itemId < 2020) default (tilt)
+  float32 pitch2 if (itemId > 2010 && itemId < 2020) default (0)
+  int32 tempOutputObjIdx
+  int32 tempInputObjIdx
+  int8 outputToSlot
+  int8 inputFromSlot
+  int8 outputFromSlot
+  int8 inputToSlot
+  int8 outputOffset
+  int8 inputOffset
+  int16 recipeId
+  int16 filterId
+  int16 numParameters
+  int32 parameters[numParameters]
+}
+
+BlueprintBuildingLayoutV102 {
+  int32 index
+  int16 itemId
+  int16 modelIndex
+  int8 areaIndex
+  Vector3 localOffset
+  float32 yaw
+  float32 tilt if ((itemId > 2000 && itemId < 2010) || (itemId > 2010 && itemId < 2020)) default (0)
+  float32 pitch if (itemId > 2010 && itemId < 2020) default (0)
+  Vector3 localOffset2 if (itemId > 2010 && itemId < 2020) default (localOffset)
+  float32 yaw2 if (itemId > 2010 && itemId < 2020) default (yaw)
+  float32 tilt2 if (itemId > 2010 && itemId < 2020) default (tilt)
+  float32 pitch2 if (itemId > 2010 && itemId < 2020) default (0)
+  int32 tempOutputObjIdx
+  int32 tempInputObjIdx
+  int8 outputToSlot
+  int8 inputFromSlot
+  int8 outputFromSlot
+  int8 inputToSlot
+  int8 outputOffset
+  int8 inputOffset
+  int16 recipeId
+  int16 filterId
+  int16 numParameters
+  int32 parameters[numParameters]
+  int32 hasContent
+  string content if (hasContent)
+}
+
+BPReformData {
+  uint8 version = 0
+  int32 numRects
+  BPReformRect rects[numRects]
+  uint32 customReformColorMask
+  int32 numCustomReformColors
+  uint32 customReformColors[numCustomReformColors]
+}
+
+BPReformRect {
+  uint8 version = 0
+  int16 x
+  int16 y
+  uint8 w
+  uint8 h
+  uint8 data
+  uint8 areaIndex
+}

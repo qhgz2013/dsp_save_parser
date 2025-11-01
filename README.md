@@ -93,8 +93,22 @@ data.game_data.game_desc.saved_theme_ids.pop()  # remove element
 data.game_data.game_desc.num_saved_theme_ids -= 1  # also decrease the array length manually
 ```
 
-## Save data file structure
+### Parse blueprint text file (deserialization)
+
+`blueprint.py` provides the necessary codes for parsing blueprint files. Run `python blueprint.py your_blueprint_file_path.txt` can print something like:
+
+```text
+Blueprint(layout=<EIconLayout.ONE_ICON: 10>, icon0=2206, icon1=0, icon2=0, icon3=0, icon4=0, time=datetime.datetime(2023, 10, 29, 23, 0, 50, 869514), game_version='0.9.27.15466', short_desc='capacitor100-90mw', desc='', data=<BlueprintData [0-6147] (version=1, cursor_offset_x=14, cursor_offset_y=14, cursor_target_area=0, drag_box_size_x=28, drag_box_size_y=28, primary_area_idx=0, num_areas=1, areas=<list>, num_buildings=100, buildings=<list>, patch=1, has_reform_data=None, reform_data=None)>)
+```
+
+## File structure
+
+### DSV Save format
 
 Refers to [save_format.txt](dsp_save_parser/save_format.txt) for detail. It should be quite straightforward and easy-understanding, maybe?
 
 As for the meaning of each field, ask the developers rather than me.
+
+### Blueprint format
+
+Refers to [blueprint_format.txt](dsp_save_parser/blueprint_format.txt) for detail.

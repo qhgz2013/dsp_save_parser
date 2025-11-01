@@ -60,20 +60,33 @@ SPACES = re.compile(r'[ \t]*')
 SPACE = re.compile(r'[ \t]')
 TOKEN = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 ARRAY_SIZE = re.compile(r'\s*([^]]+)\s*')
-CONDITION = re.compile(r'if\s*\(\s*([^)]+)\s*\)')
+CONDITION = re.compile(r'if\s*')
 DEFAULT_CLAUSE = re.compile(r'default\s*\(\s*([^)]+)\s*\)')
 PROPS_BODY = re.compile(r'props\s*\(\s*([^)]+)\s*\)')
+TOKEN_SUB = re.compile(r'(^|[^\w])([A-Za-z_][A-Za-z0-9_]*)')  # workaround since re does not support var-length positive look-behind
 
 BUILTIN_TYPES = {'int8', 'uint8', 'int16', 'uint16', 'int32', 'uint32', 'int64', 'uint64', 'float32', 'float64',
                  'string', 'boolean', 'FlexibleInt'}
 FLOAT_COMPARISON_EPS = 1e-6
 KEYWORDS_IN_IF_CLAUSE = {'None', 'not', 'and', 'or', 'is'}
 
+def find_parenthesis(s: str) -> str:
+    level = 0
+    for i, ch in enumerate(s):
+        if ch == '(':
+            level += 1
+        elif ch == ')':
+            level -= 1
+            if level == 0:
+                return s[1:i]
+        else:
+            assert ch not in {'\r', '\n'}, f'new line is not allowed: "{s}"'
+    return ''
 
 # convert camel variable like varName to var_name, VARName to var_name ...
 def camel_to_underline(name: str):
     ret = re.sub(r'([A-Z]+)(?=[A-Z])', r'_\1', name)
-    ret = re.sub(r'([A-Z]*)([A-Z])(?=[a-z0-9_])', r'\1_\2', ret).lower()
+    ret = re.sub(r'([A-Z]*)([A-Z])(?=[a-z0-9_]|$)', r'\1_\2', ret).lower()
     # remove leading "_"
     if ret.startswith('_'):
         ret = ret[1:]
@@ -129,9 +142,11 @@ def parse_if_clause(def_file: TextIO, var_attrs: Dict[str, Any], line_no: int):
     if line.startswith('if'):
         match = CONDITION.match(line)
         assert match, 'line %d: %s' % (line_no, line)
-        condition = match.group(1)
+        #condition = match.group(1)
         rollback_position += match.end()
-        var_attrs['if_clause'] = condition
+        condition = find_parenthesis(line[match.end():])
+        var_attrs['if_clause'] = condition.strip()
+        rollback_position += len(condition) + 2
     else:
         var_attrs['if_clause'] = None
     def_file.seek(rollback_position)
@@ -671,8 +686,8 @@ def write_py_class(class_def: dict, out_py_file: TextIO, line_no: int):
             for i, token in enumerate(if_clause_token):
                 if token in KEYWORDS_IN_IF_CLAUSE:  # skip keywords
                     continue
-                if TOKEN.match(token):
-                    if_clause_token[i] = 'self.%s' % token
+                if TOKEN.search(token):
+                    if_clause_token[i] = TOKEN_SUB.sub(r'\1self.\2', token)
             save_stmt.insert(0, 'if %s:' % ' '.join(if_clause_token))
         for stmt in save_stmt:
             out_py_file.write('        %s\n' % stmt)
@@ -710,8 +725,8 @@ def write_py_class(class_def: dict, out_py_file: TextIO, line_no: int):
             for i, token in enumerate(if_clause_token):
                 if token in KEYWORDS_IN_IF_CLAUSE:  # skip keywords
                     continue
-                if TOKEN.match(token):
-                    if_clause_token[i] = 'self.%s' % token
+                if TOKEN.search(token):
+                    if_clause_token[i] = TOKEN_SUB.sub(r'\1self.\2', token)
             size_stmt.insert(0, 'if %s:' % ' '.join(if_clause_token))
         for stmt in size_stmt:
             out_py_file.write('        %s\n' % stmt)
