@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 10
-// releaseGameVersion: 33
-// buildGameVersion: 27005
+// releaseGameVersion: 34
+// buildGameVersion: 28392
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -126,7 +126,7 @@ AccountData {
 
 GameData {
   int32 version = 13
-  int32 patch = 20 // version >= 4
+  int32 patch = 22 // version >= 4
   AccountData accountData // repeated, version >= 3
   string gameName
   GameDesc gameDesc
@@ -157,7 +157,22 @@ GameData {
 }
 
 GalacticDigitalSystem {
+  int32 version = 1
+  ObjectPool<TodoModule> todos // version >= 1
+}
+
+TodoModule {
   int32 version = 0
+  int32 id
+  int32 ownerId
+  int32 ownerType // ETodoModuleOwnerType { Global, Astro, Entity }
+  boolean hasReminder
+  int32 lenTitle
+  string title if (lenTitle)
+  int32 lenContent
+  string content if (lenContent)
+  int32 numContentColorIndex
+  int16 contentColorIndex[numContentColorIndex]
 }
 
 GalaxyData {
@@ -269,7 +284,7 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 18
+  int32 version = 19
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
@@ -337,6 +352,8 @@ GamePrefsData {
   int32 numMarkerSelectedColor // version >= 17 (in LoadMarkerPrefs)
   int32 markerSelectedColor[numMarkerSelectedColor] // version >= 17
   boolean autoOpenDashboardOnAddStatPlan // version >= 17
+  boolean signalPickerAutoClose // version >= 19
+  boolean signalPickerShowUnlock // version >= 19
 }
 
 // used in GamePrefsData
@@ -1692,7 +1709,7 @@ CargoPathExportStruct {
 }
 
 MonitorComponent {
-  int32 version = 2
+  int32 version = 3
   int32 id
   int32 entityId
   int32 pcId
@@ -1718,6 +1735,7 @@ MonitorComponent {
   FlexibleInt systemWarningSignalId
   uint8 spawnItemOperator // version >= 2
   float32 spawnItemAccumulator // version >= 2
+  int32 digitalSignalId // version >= 3
 }
 
 CargoPath {
@@ -2001,7 +2019,7 @@ PowerNetworkStructures {
 }
 
 FactorySystem {
-  int32 version = 0
+  int32 version = 1
   int32 minerCapacity
   int32 minerCursor
   int32 minerRecycleCursor
@@ -2010,7 +2028,7 @@ FactorySystem {
   int32 inserterCapacity
   int32 inserterCursor
   int32 inserterRecycleCursor
-  InserterComponent inserterPool[inserterCursor - 1]
+  InserterComponentV2 inserterPool[inserterCursor - 1] // layout changed since version >= 1
   int32 inserterRecycle[inserterRecycleCursor]
   int32 assemblerCapacity
   int32 assemblerCursor
@@ -2060,13 +2078,25 @@ MinerComponent {
   float64 costFrac // version >= 2
 }
 
+InserterComponentV2 {
+  InserterComponent component
+  InserterPose pose
+}
+
+InserterPose {
+  uint8 version = 0
+  Vector3 pos2
+  Quaternion rot2
+  uint8 t1
+  uint8 t2
+}
+
 InserterComponent {
-  int32 version = 3
+  int32 version = 4
   int32 id
   int32 entityId
   int32 pcId
   uint8 stage  // EInserterStage { Picking, Sending, Inserting, Returning }, int32 for version 0
-  uint8 speed  // divided by 10000 and convert to uint8, int32 for version 0 (no need to divide)
   int32 time
   int32 stt
   int32 delay
@@ -2083,40 +2113,30 @@ InserterComponent {
   int16 filter  // int32 for version 0
   int16 itemId  // int32 for version 0
   uint8 stackCount  // int32 for version 0
-  Vector3 pos2
-  Quaternion rot2
-  uint8 t1  // int16 for version 0
-  uint8 t2  // int16 for version 0
   int16 itemCount  // version >= 2
   int16 itemInc  // version >= 2
 }
 
 AssemblerComponent {
-  int32 version = 5
+  int32 version = 6
   int32 id
   int32 entityId
   int32 pcId
   boolean replicating
-  boolean reserved = 0  // always false
   int32 speed
   int32 time
   int32 speedOverride  // version >= 2
   int32 extraTime  // version >= 2
   int32 extraSpeed  // version >= 2
   int32 extraPowerRatio  // version >= 2
-  boolean productive  // version >= 2
   boolean forceAccMode  // version >= 3
   boolean incUsed // version >= 4
   int32 cycleCount // version >= 5
   int32 extraCycleCount // version >= 5
   int16 recipeId  // int32 for version 0
   uint8 recipeType if (recipeId > 0)
-  int32 timeSpend if (recipeId > 0)
-  int32 extraTimeSpend if (recipeId > 0)  // version >= 2
   uint8 numRequires if (recipeId > 0)
   int16 requires[numRequires] if (recipeId > 0)
-  uint8 numRequireCounts if (recipeId > 0)
-  int16 requireCounts[numRequireCounts] if (recipeId > 0)
   uint8 numServed if (recipeId > 0)
   int32 served[numServed] if (recipeId > 0)
   uint8 numIncServed if (recipeId > 0)  // version >= 2
@@ -2125,8 +2145,6 @@ AssemblerComponent {
   int16 needs[numNeeds] if (recipeId > 0)
   uint8 numProducts if (recipeId > 0)
   int16 products[numProducts] if (recipeId > 0)
-  uint8 numProductCounts if (recipeId > 0)
-  int16 productCounts[numProductCounts] if (recipeId > 0)
   uint8 numProduced if (recipeId > 0)
   int32 produced[numProduced] if (recipeId > 0)
 }
@@ -2216,20 +2234,18 @@ SiloComponent {
 }
 
 LabComponent {
-  int32 version = 4
+  int32 version = 5
   int32 id
   int32 entityId
   int32 pcId
   int32 nextLabId
   boolean replicating
-  boolean reserved = 0  // always false
   int32 time
   int32 hashBytes
   int32 extraHashBytes  // version >= 1
   int32 extraTime  // version >= 1
   int32 extraSpeed  // version >= 1
   int32 extraPowerRatio  // version >= 1
-  boolean productive  // version >= 1
   boolean forceAccMode  // version >= 2
   boolean incUsed // version >= 3
   int32 speed  // version >= 2
@@ -2238,14 +2254,10 @@ LabComponent {
   int32 recipeId
   int32 techId
   // matrix mode
-  int32 timeSpend if (not researchMode and recipeId > 0)
-  int32 extraTimeSpend if (not researchMode and recipeId > 0)  // version >= 1
   int32 cycleCount if (not researchMode and recipeId > 0)  // version >= 4
   int32 extraCycleCount if (not researchMode and recipeId > 0)  // version >= 4
   int32 numRequires if (not researchMode and recipeId > 0)
   int32 requires[numRequires] if (not researchMode and recipeId > 0)
-  int32 numRequireCounts if (not researchMode and recipeId > 0)
-  int32 requireCounts[numRequireCounts] if (not researchMode and recipeId > 0)
   int32 numServed if (not researchMode and recipeId > 0)
   int32 served[numServed] if (not researchMode and recipeId > 0)
   int32 numIncServed if (not researchMode and recipeId > 0)  // version >= 1
@@ -2254,13 +2266,9 @@ LabComponent {
   int32 needs[numNeeds] if (not researchMode and recipeId > 0)
   int32 numProducts if (not researchMode and recipeId > 0)
   int32 products[numProducts] if (not researchMode and recipeId > 0)
-  int32 numProductCounts if (not researchMode and recipeId > 0)
-  int32 productCounts[numProductCounts] if (not researchMode and recipeId > 0)
   int32 numProduced if (not researchMode and recipeId > 0)
   int32 produced[numProduced] if (not researchMode and recipeId > 0)
   // research mode
-  int32 numMatrixPoints if (researchMode)
-  int32 matrixPoints[numMatrixPoints] if (researchMode)
   int32 numMatrixServed if (researchMode)
   int32 matrixServed[numMatrixServed] if (researchMode)
   int32 numMatrixNeeds if (researchMode)
@@ -2512,7 +2520,7 @@ RGBAF {
 }
 
 DigitalSystem {
-  int32 version = 2
+  int32 version = 3
   int32 speakerCapacity
   int32 speakerCursor
   int32 speakerRecycleCursor
@@ -2520,6 +2528,7 @@ DigitalSystem {
   int32 speakerRecycle[speakerRecycleCursor]
   ObjectPool<ExtraInfoComponent> extraInfoes // version >= 1
   ObjectPool<MarkerComponent> markers // version >= 2
+  int32 planetTodoId // version >= 3
 }
 
 SpeakerComponent {
@@ -2556,29 +2565,30 @@ ExtraInfoComponent {
 }
 
 MarkerComponent {
-  int32 version = 0
+  int32 version = 1
   int32 id
   int32 gid
   int32 astroId
   int32 entityId
   int32 pcId
-  int32 iconLayout // EMarkerIconLayout
-  int32 icon0
-  int32 icon1
-  int32 icon2
-  int32 icon3
-  int32 level // EMarkerLevel
+  int32 digitalSignalId
+  int32 icon
+  int32 lenWord
+  string word if (lenWord)
+  int32 visibility // EMarkerVisibility { None, InSight, LocalPlanet, LocalStar, EntireCluster }
+  int32 detailLevel // EMarkerDetailLevel { None, BriefInfo, Header, DetailedInfo }
+  boolean offline
   uint8 color
   float32 height
+  float32 radius
   float32 power
   Vector3 pos
   Quaternion rot
-  int32 nameLength
-  string name if (nameLength > 0)
-  int32 tagsLength
-  string tags if (tagsLength > 0)
-  int32 commentLength
-  string comment if (commentLength > 0)
+  int32 todoId
+  int32 lenName
+  string name if (lenName)
+  int32 lenTags
+  string tags if (lenTags)
 }
 
 DysonSphere {
