@@ -2,8 +2,8 @@
 
 // majorGameVersion: 0
 // minorGameVersion: 10
-// releaseGameVersion: 34
-// buildGameVersion: 28529
+// releaseGameVersion: 35
+// buildGameVersion: 29057
 
 // For file syntax, please refer to generator.py (it should be simple enough)
 
@@ -126,7 +126,7 @@ AccountData {
 
 GameData {
   int32 version = 13
-  int32 patch = 22 // version >= 4
+  int32 patch = 23 // version >= 4
   AccountData accountData // repeated, version >= 3
   string gameName
   GameDesc gameDesc
@@ -176,8 +176,9 @@ TodoModule {
 }
 
 GalaxyData {
-  int32 version = 0
+  int32 version = 1
   LinkedListTermM1<int32, PlanetScannedData> data // actually calls PlanetData.ImportScannedData
+  LinkedListTermM1<int32, int32> vegeCollectionActive // version >= 1
 }
 
 PlanetScannedData {
@@ -218,7 +219,7 @@ DysonSphereData {
 }
 
 GameDesc {
-  int32 version = 9
+  int32 version = 10
   int64 creationTick // version >= 3
   int32 creationVersionMajor // version >= 6
   int32 creationVersionMinor // version >= 6
@@ -227,6 +228,7 @@ GameDesc {
   int32 galaxyAlgo
   int32 galaxySeed
   int32 starCount
+  int32 starNameLCID // version >= 10
   int32 playerProto
   float32 resourceMultiplier // version >= 2
   int32 numSavedThemeIds // version >= 1
@@ -284,7 +286,7 @@ AchievementRuntimeData_MechaShieldResist {
 
 // used in GameData
 GamePrefsData {
-  int32 version = 19
+  int32 version = 20
   VectorLF3 cameraUPos
   Quaternion cameraURot
   int32 reformBrushSize // version >= 1
@@ -354,6 +356,16 @@ GamePrefsData {
   boolean autoOpenDashboardOnAddStatPlan // version >= 17
   boolean signalPickerAutoClose // version >= 19
   boolean signalPickerShowUnlock // version >= 19
+  int32 mineralExhaustionAlertMode // version >= 20
+  int32 numVeinHighlightMasks // version >= 20
+  VeinHighlightMask veinHighlightMasks[numVeinHighlightMasks]
+  int32 numGreenPrebuildWarningPlanetIds // version >= 20
+  int32 greenPrebuildWarningPlanetIds[numGreenPrebuildWarningPlanetIds]
+}
+
+VeinHighlightMask {
+  int32 key
+  uint32 value
 }
 
 // used in GamePrefsData
@@ -375,7 +387,7 @@ ControlPanelFilter {
 }
 
 GameHistoryData {
-  int32 version = 19
+  int32 version = 20
   int32 numRecipeUnlocked
   int32 recipeUnlocked[numRecipeUnlocked]
   int32 numEnemyDropItemUnlocked // version >= 11
@@ -407,6 +419,7 @@ GameHistoryData {
   float32 constructionDroneSpeed // version >= 11
   int32 constructionDroneMovement // version >= 11
   int32 autoReconstructSpeed // version >= 11
+  boolean manualPlantVegetation // version >= 20
   float32 logisticDroneSpeed
   float32 logisticDroneSpeedScale
   int32 logisticDroneCarries
@@ -774,7 +787,7 @@ TrafficStat {
 }
 
 Player {
-  int32 version = 6
+  int32 version = 7
   int32 planetId
   int32 packageColCount // version >= 6
   boolean isAlive // version >= 4
@@ -794,6 +807,7 @@ Player {
   StorageComponent package
   DeliveryPackage deliveryPackage // version >= 3
   PlayerNavigation navigation // version >= 1
+  VegetableCollection vegetableCollection // version >= 7
   int64 sandCount // changed to int64 after version 4
 }
 
@@ -1210,6 +1224,22 @@ PlayerNavigation {
   float64 maxSailSpeed
 }
 
+// used in Player
+VegetableCollection {
+  int32 version = 0
+  int32 numPlayerVege
+  KeyValuePair<int32, int32> playerVege[numPlayerVege]
+  int32 ownerCursor
+  VegeOwner owners[ownerCursor]
+}
+
+// used in VegetableCollection
+VegeOwner {
+  int64 ownerKey
+  int32 nodeCount
+  KeyValuePair<int32, int32> nodes[nodeCount] // (protoId, count), walked from headNode
+}
+
 GalacticTransport {
   int32 version = 1
   int32 numStation2stationRoutes
@@ -1579,7 +1609,7 @@ EnemyData {
 }
 
 VegeData {
-  uint8 version = 1
+  uint8 version = 2
   int32 id
   int16 protoId
   int16 modelIndex
@@ -1589,6 +1619,7 @@ VegeData {
   Vector3 pos
   Quaternion rot
   Vector3 scl
+  uint8 stateFlags // version >= 2
 }
 
 VeinData {
@@ -1873,7 +1904,7 @@ PowerSystem {
 }
 
 PowerGeneratorComponent {
-  int32 version = 7
+  int32 version = 8
   int32 id
   int32 entityId
   uint8 subId  // version >= 1
@@ -1886,6 +1917,7 @@ PowerGeneratorComponent {
   int64 genEnergyPerTick
   int64 useFuelPerTick
   int16 fuelMask
+  int16 catalystMask // version >= 8
   int64 fuelEnergy
   int16 curFuelId
   int16 fuelId
@@ -1894,8 +1926,12 @@ PowerGeneratorComponent {
   boolean productive  // version >= 2
   boolean incUsed // version >= 7
   uint8 fuelIncLevel  // version >= 2
+  uint8 catalystIncLevel // version >= 8
   int64 fuelHeat
   int32 catalystId
+  int32 curCatalystId // version >= 8
+  int16 catalystCount // version >= 8
+  int16 catalystInc // version >= 8
   int32 catalystPoint
   int32 catalystIncPoint  // version >= 2
   int32 productId
@@ -2064,7 +2100,7 @@ MinerComponent {
   int32 pcId
   int32 type  // EMinerType { None, Water, Vein, Oil }
   int32 speed
-  int32 speedDamper // version >= 1
+  float32 speedDamper // version >= 1
   int32 time
   int32 period
   int32 insertTarget
