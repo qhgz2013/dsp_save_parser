@@ -2100,7 +2100,7 @@ MinerComponent {
   int32 pcId
   int32 type  // EMinerType { None, Water, Vein, Oil }
   int32 speed
-  int32 speedDamper // version >= 1
+  float32 speedDamper // version >= 1
   int32 time
   int32 period
   int32 insertTarget
